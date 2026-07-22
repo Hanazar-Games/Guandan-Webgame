@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071b18" />
+    <meta name="description" content="四人掼蛋单机对局" />
+    <title>掼蛋 · 牌桌</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="掼蛋牌桌">
+          <span class="brand-mark">掼</span>
+          <div>
+            <h1>掼蛋</h1>
+            <p>经典四人对局</p>
+          </div>
+        </div>
+
+        <div class="round-meta" aria-label="本局信息">
+          <div><span>第</span><strong id="round-number">1</strong><span>局</span></div>
+          <i></i>
+          <div><span>当前打</span><strong id="level-rank" class="level-rank">2</strong></div>
+        </div>
+
+        <div class="header-actions">
+          <button class="icon-button" id="sound-button" type="button" aria-label="关闭音效" title="音效">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Zm12.5 3a4.5 4.5 0 0 0-2.1-3.8v7.6a4.5 4.5 0 0 0 2.1-3.8Zm-2.1-7.7v2.1a6.5 6.5 0 0 1 0 11.2v2.1a8.5 8.5 0 0 0 0-15.4Z"/></svg>
+          </button>
+          <button class="icon-button" id="help-button" type="button" aria-label="查看规则" title="规则">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18h2v-2h-2v2Zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm0-14a4 4 0 0 0-4 4h2a2 2 0 1 1 3.4 1.4c-1.3 1.3-2.4 2.1-2.4 4.1h2c0-1.2.7-1.8 1.8-2.9A4 4 0 0 0 12 6Z"/></svg>
+          </button>
+          <button class="new-game-button" id="new-game-button" type="button">重新开局</button>
+        </div>
+      </header>
+
+      <section class="table-wrap" aria-label="掼蛋牌桌">
+        <div class="table-grain"></div>
+        <div class="team-badge team-us">我方</div>
+        <div class="team-badge team-them">对方</div>
+
+        <aside class="match-score" aria-label="双方进度">
+          <div class="score-team ours"><span>我方级数</span><strong id="our-level">2</strong><small id="our-wins">0 胜</small></div>
+          <i></i>
+          <div class="score-team"><span>对方级数</span><strong id="their-level">2</strong><small id="their-wins">0 胜</small></div>
+        </aside>
+
+        <section class="player player-top" id="player-2">
+          <div class="avatar-wrap">
+            <div class="avatar avatar-cyan">林</div>
+            <span class="partner-dot" title="你的队友"></span>
+          </div>
+          <div class="player-copy">
+            <div class="name-line"><strong>林默</strong><span>队友</span></div>
+            <div class="card-count"><i></i><span id="count-2">27</span> 张</div>
+          </div>
+          <div class="turn-pill" id="turn-2">思考中</div>
+        </section>
+
+        <section class="player player-left" id="player-1">
+          <div class="avatar avatar-amber">周</div>
+          <div class="player-copy">
+            <div class="name-line"><strong>周舟</strong></div>
+            <div class="card-count"><i></i><span id="count-1">27</span> 张</div>
+          </div>
+          <div class="turn-pill" id="turn-1">思考中</div>
+        </section>
+
+        <section class="player player-right" id="player-3">
+          <div class="avatar avatar-violet">许</div>
+          <div class="player-copy">
+            <div class="name-line"><strong>许晏</strong></div>
+            <div class="card-count"><i></i><span id="count-3">27</span> 张</div>
+          </div>
+          <div class="turn-pill" id="turn-3">思考中</div>
+        </section>
+
+        <div class="opponent-hand opponent-top" id="opponent-hand-2" aria-hidden="true"></div>
+        <div class="opponent-hand opponent-left" id="opponent-hand-1" aria-hidden="true"></div>
+        <div class="opponent-hand opponent-right" id="opponent-hand-3" aria-hidden="true"></div>
+
+        <section class="trick-zone" aria-live="polite">
+          <div class="status-message" id="status-message">
+            <span class="status-dot"></span>
+            <span id="status-text">轮到你出牌</span>
+          </div>
+          <div class="played-by" id="played-by"></div>
+          <div class="played-cards" id="played-cards"></div>
+          <div class="combo-label" id="combo-label"></div>
+        </section>
+
+        <section class="player player-you" id="player-0">
+          <div class="avatar-wrap">
+            <div class="avatar avatar-red">你</div>
+          </div>
+          <div class="player-copy">
+            <div class="name-line"><strong>牌手</strong><span>我方</span></div>
+            <div class="card-count"><i></i><span id="count-0">27</span> 张</div>
+          </div>
+        </section>
+
+        <div class="action-area">
+          <p class="selection-tip" id="selection-tip">请选择要出的牌</p>
+          <div class="action-buttons">
+            <button class="game-button secondary" id="pass-button" type="button">不出</button>
+            <button class="game-button secondary" id="hint-button" type="button">提示</button>
+            <button class="game-button primary" id="play-button" type="button">出牌</button>
+          </div>
+        </div>
+
+        <div class="hand-scroll" id="hand-scroll">
+          <div class="hand" id="player-hand" aria-label="你的手牌"></div>
+        </div>
+      </section>
+
+      <footer class="game-footer">
+        <span><i class="online-dot"></i>单机练习</span>
+        <span id="footer-tip">你的搭档坐在对面</span>
+      </footer>
+    </main>
+
+    <dialog id="rules-dialog" class="modal">
+      <div class="modal-head">
+        <div><span>新手指南</span><h2>基础规则</h2></div>
+        <button type="button" id="close-rules" aria-label="关闭规则">×</button>
+      </div>
+      <div class="rules-grid">
+        <article><b>01</b><div><h3>四人两队</h3><p>你与对家组成一队。每人 27 张牌，先出完手牌者获得头游。</p></div></article>
+        <article><b>02</b><div><h3>同型压制</h3><p>非炸弹牌需张数、牌型一致且点数更大；炸弹可压制普通牌型。</p></div></article>
+        <article><b>03</b><div><h3>逢人配</h3><p>红桃级牌可充当除大小王以外的任意牌，单独打出时仍是级牌。</p></div></article>
+        <article><b>04</b><div><h3>本版支持</h3><p>单张、对子、三张、三带二、顺子、三连对、钢板、同花顺与炸弹。</p></div></article>
+      </div>
+      <button class="game-button primary modal-confirm" id="confirm-rules" type="button">知道了</button>
+    </dialog>
+
+    <dialog id="result-dialog" class="modal result-modal">
+      <div class="result-icon">冠</div>
+      <p class="eyebrow">本局结束</p>
+      <h2 id="result-title">我方获胜</h2>
+      <p id="result-copy"></p>
+      <div class="ranking" id="ranking"></div>
+      <button class="game-button primary modal-confirm" id="again-button" type="button">再来一局</button>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="assertive"></div>
+    <script src="script.js"></script>
+  </body>
+</html>
