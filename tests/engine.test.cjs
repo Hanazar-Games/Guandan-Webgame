@@ -12,6 +12,7 @@ const clearedTimers = [];
 const clearedIntervals = [];
 const intervals = [];
 let audioContexts = 0;
+let oscillatorStops = 0;
 const audioNode = () => ({ connect() {}, disconnect() {} });
 class FakeAudioContext {
   constructor() {
@@ -21,7 +22,10 @@ class FakeAudioContext {
     this.state = "running";
   }
   createOscillator() {
-    return { ...audioNode(), frequency: { value: 0 }, type: "sine", start() {}, stop() {}, addEventListener() {} };
+    return {
+      ...audioNode(), frequency: { value: 0 }, type: "sine", start() {},
+      stop() { oscillatorStops++; }, addEventListener() {}
+    };
   }
   createGain() {
     return {
@@ -89,9 +93,18 @@ state.level = "2";
 const pair5 = detectCombo([card("5"), card("5", "♣")]);
 const pair8 = detectCombo([card("8"), card("8", "♣")]);
 const bomb4 = detectCombo([card("4"), card("4", "♥"), card("4", "♣"), card("4", "♦")]);
+const bomb5 = detectCombo([card("4"), card("4", "♥"), card("4", "♣"), card("4", "♦"), card("4", "♠", 1)]);
+const straightFlush = detectCombo([card("6", "♣"), card("7", "♣"), card("8", "♣"), card("9", "♣"), card("10", "♣")]);
+const bomb6 = detectCombo([
+  card("4"), card("4", "♥"), card("4", "♣"), card("4", "♦"), card("4", "♠", 1), card("4", "♥", 1)
+]);
+const fourJokers = detectCombo([joker(false), joker(false, 1), joker(true), joker(true, 1)]);
 assert.equal(canBeat(pair8, pair5), true);
 assert.equal(canBeat(pair5, pair8), false);
 assert.equal(canBeat(bomb4, pair8), true, "炸弹应压过普通牌型");
+assert.equal(canBeat(straightFlush, bomb5), true, "同花顺应高于五张炸弹");
+assert.equal(canBeat(bomb6, straightFlush), true, "六张炸弹应高于同花顺");
+assert.equal(canBeat(fourJokers, bomb6), true, "四王炸应高于其他炸弹");
 
 const aiHand = [card("3"), card("6"), card("6", "♣"), card("K")];
 const aiMove = findAIMove(aiHand, pair5);
@@ -153,8 +166,10 @@ state.music = true;
 startBGM();
 startBGM();
 assert.equal(intervals.length, 1, "背景音乐只能启动一个调度器");
+const scheduledStops = oscillatorStops;
 stopBGM();
 assert.deepEqual(clearedIntervals, [1]);
+assert.equal(oscillatorStops > scheduledStops, true, "关闭背景音乐应立即停止仍在播放的音符");
 state.music = false;
 
 const shortcutEvent = (key, interactive = false) => ({

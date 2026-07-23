@@ -40,7 +40,7 @@
     ["round-number", "level-rank", "status-text", "played-by", "played-cards", "combo-label",
       "selection-tip", "player-hand", "pass-button", "hint-button", "play-button", "new-game-button",
       "help-button", "sound-button", "music-button", "rules-dialog", "close-rules", "confirm-rules", "result-dialog",
-      "result-title", "result-copy", "ranking", "again-button", "toast", "footer-tip",
+      "restart-dialog", "cancel-restart", "confirm-restart", "result-title", "result-copy", "ranking", "again-button", "toast", "footer-tip",
       "our-level", "their-level", "our-wins", "their-wins"
     ].forEach(id => el[id] = byId(id));
   }
@@ -488,6 +488,7 @@
   function startGame(resetMatch = false) {
     clearTimeout(state.timer);
     cancelResultDialog();
+    clearToast();
     if (resetMatch) {
       state.round = 1;
       state.level = "2";
@@ -510,6 +511,7 @@
     el["round-number"].textContent = state.round;
     el["level-rank"].textContent = state.level;
     el["footer-tip"].textContent = "你的搭档坐在对面";
+    if (el["restart-dialog"].open) el["restart-dialog"].close();
     if (el["result-dialog"].open) el["result-dialog"].close();
     render();
     updateSelectionTip();
@@ -560,10 +562,18 @@
     toastTimer = setTimeout(() => el.toast.classList.remove("show"), 1800);
   }
 
+  function clearToast() {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+    el.toast.classList.remove("show");
+    el.toast.textContent = "";
+  }
+
   const BGM_NOTES = [196, 220, 246.94, 293.66, 329.63, 293.66, 246.94, 220];
   let audioContext = null;
   let bgmTimer = null;
   let bgmStep = 0;
+  const bgmVoices = new Set();
 
   function getAudioContext() {
     try {
@@ -577,22 +587,33 @@
     }
   }
 
-  function playVoice(frequency, duration, volume, type = "sine") {
+  function playVoice(frequency, duration, volume, type = "sine", voices = null) {
     const ctx = getAudioContext();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const now = ctx.currentTime;
-    osc.frequency.value = frequency;
-    osc.type = type;
-    gain.gain.setValueAtTime(.001, now);
-    gain.gain.exponentialRampToValueAtTime(volume, now + .02);
-    gain.gain.exponentialRampToValueAtTime(.001, now + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.addEventListener("ended", () => { osc.disconnect(); gain.disconnect(); }, { once: true });
-    osc.start(now);
-    osc.stop(now + duration);
+    if (!ctx) return false;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const voice = { osc, gain };
+      const now = ctx.currentTime;
+      osc.frequency.value = frequency;
+      osc.type = type;
+      gain.gain.setValueAtTime(.001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + .02);
+      gain.gain.exponentialRampToValueAtTime(.001, now + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      voices?.add(voice);
+      osc.addEventListener("ended", () => {
+        voices?.delete(voice);
+        osc.disconnect();
+        gain.disconnect();
+      }, { once: true });
+      osc.start(now);
+      osc.stop(now + duration);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function playTone(frequency, duration) {
@@ -600,22 +621,33 @@
   }
 
   function playBGMNote() {
-    if (!state.music || document.hidden) return;
+    if (!state.music || document.hidden) return false;
     const note = BGM_NOTES[bgmStep++ % BGM_NOTES.length];
-    playVoice(note, 1.1, .007, "triangle");
-    if (bgmStep % 4 === 1) playVoice(note / 2, 1.6, .0035);
+    const played = playVoice(note, 1.1, .007, "triangle", bgmVoices);
+    if (bgmStep % 4 === 1) playVoice(note / 2, 1.6, .0035, "sine", bgmVoices);
+    return played;
   }
 
   function startBGM() {
-    if (!state.music || bgmTimer || document.hidden) return;
-    playBGMNote();
+    if (!state.music || document.hidden) return false;
+    if (bgmTimer) return true;
+    if (!getAudioContext() || !playBGMNote()) return false;
     bgmTimer = setInterval(playBGMNote, 1200);
+    return true;
   }
 
   function stopBGM() {
-    if (!bgmTimer) return;
-    clearInterval(bgmTimer);
-    bgmTimer = null;
+    if (bgmTimer) {
+      clearInterval(bgmTimer);
+      bgmTimer = null;
+    }
+    const now = audioContext?.currentTime || 0;
+    for (const { osc, gain } of bgmVoices) {
+      gain.gain.cancelScheduledValues?.(now);
+      gain.gain.setValueAtTime(.001, now);
+      try { osc.stop(now); } catch (_) {}
+    }
+    bgmVoices.clear();
   }
 
   function syncAudioButtons() {
@@ -643,12 +675,20 @@
     el["play-button"].addEventListener("click", humanPlay);
     el["pass-button"].addEventListener("click", humanPass);
     el["hint-button"].addEventListener("click", hint);
-    el["new-game-button"].addEventListener("click", () => startGame(false));
+    el["new-game-button"].addEventListener("click", () => {
+      if (!el["restart-dialog"].open) el["restart-dialog"].showModal();
+    });
+    el["cancel-restart"].addEventListener("click", () => el["restart-dialog"].close());
+    el["confirm-restart"].addEventListener("click", () => startGame(false));
     el["again-button"].addEventListener("click", () => startGame(el["again-button"].dataset.resetMatch === "true"));
     el["help-button"].addEventListener("click", () => el["rules-dialog"].showModal());
     el["close-rules"].addEventListener("click", () => el["rules-dialog"].close());
     el["confirm-rules"].addEventListener("click", () => el["rules-dialog"].close());
     el["result-dialog"].addEventListener("cancel", event => event.preventDefault());
+    el["restart-dialog"].addEventListener("cancel", event => {
+      event.preventDefault();
+      el["restart-dialog"].close();
+    });
     el["sound-button"].addEventListener("click", () => {
       state.sound = !state.sound;
       syncAudioButtons();
@@ -657,9 +697,18 @@
     });
     el["music-button"].addEventListener("click", () => {
       state.music = !state.music;
-      if (state.music) startBGM(); else stopBGM();
+      let message;
+      if (state.music && !startBGM()) {
+        state.music = false;
+        message = "当前浏览器不支持背景音乐";
+      } else if (state.music) {
+        message = "背景音乐已开启";
+      } else {
+        stopBGM();
+        message = "背景音乐已关闭";
+      }
       syncAudioButtons();
-      showToast(state.music ? "背景音乐已开启" : "背景音乐已关闭");
+      showToast(message);
     });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) stopBGM(); else startBGM();

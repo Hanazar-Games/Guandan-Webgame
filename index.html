@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#071b18" />
     <meta name="description" content="四人掼蛋单机对局" />
-    <title>掼蛋 · 牌桌 v0.2</title>
+    <title>掼蛋 · 牌桌 v0.3</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -45,9 +45,9 @@
         <div class="team-badge team-them">对方</div>
 
         <aside class="match-score" aria-label="双方进度">
-          <div class="score-team ours"><span>我方级数</span><strong id="our-level">2</strong><small id="our-wins">0 胜</small></div>
+          <div class="score-team ours"><span>我方</span><strong id="our-level">2</strong><small id="our-wins">0 胜</small></div>
           <i></i>
-          <div class="score-team"><span>对方级数</span><strong id="their-level">2</strong><small id="their-wins">0 胜</small></div>
+          <div class="score-team"><span>对方</span><strong id="their-level">2</strong><small id="their-wins">0 胜</small></div>
         </aside>
 
         <section class="player player-top" id="player-2">
@@ -114,12 +114,12 @@
         </div>
 
         <div class="hand-scroll" id="hand-scroll">
-          <div class="hand" id="player-hand" aria-label="你的手牌"></div>
+          <div class="hand" id="player-hand" role="group" aria-label="你的手牌"></div>
         </div>
       </section>
 
       <footer class="game-footer">
-        <span><i class="online-dot"></i>单机练习 <small class="version-tag">v0.2.0</small></span>
+        <span><i class="online-dot"></i>单机练习 <small class="version-tag">v0.3.0</small></span>
         <span id="footer-tip">你的搭档坐在对面</span>
       </footer>
     </main>
@@ -138,6 +138,16 @@
         <article><b>06</b><div><h3>快捷操作</h3><p>牌桌空白处可用 Enter 出牌、空格不出、H 获取提示。</p></div></article>
       </div>
       <button class="game-button primary modal-confirm" id="confirm-rules" type="button">知道了</button>
+    </dialog>
+
+    <dialog id="restart-dialog" class="modal restart-modal" aria-labelledby="restart-title" aria-describedby="restart-copy">
+      <p class="eyebrow">重新发牌</p>
+      <h2 id="restart-title">确定重开本局？</h2>
+      <p id="restart-copy">当前对局进度将丢失，双方级数和胜局保持不变。</p>
+      <div class="modal-actions">
+        <button class="game-button secondary" id="cancel-restart" type="button">取消</button>
+        <button class="game-button primary" id="confirm-restart" type="button">确认重开</button>
+      </div>
     </dialog>
 
     <dialog id="result-dialog" class="modal result-modal" aria-labelledby="result-title" aria-describedby="result-copy">

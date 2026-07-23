@@ -178,21 +178,24 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .modal-head { display:flex; align-items:flex-start; justify-content:space-between; padding:25px 28px 18px; border-bottom:1px solid rgba(255,255,255,.1); }
 .modal-head span, .eyebrow { color:var(--gold); font-size:10px; letter-spacing:3px; text-transform:uppercase; }
 .modal h2 { margin:4px 0 0; font-family:"Songti SC","Noto Serif SC",serif; font-size:25px; }
-.modal-head button { color:rgba(255,255,255,.7); background:none; border:0; font-size:29px; line-height:1; cursor:pointer; }
+.modal-head button { min-width:44px; min-height:44px; padding:0; color:rgba(255,255,255,.7); background:none; border:0; font-size:29px; line-height:1; cursor:pointer; }
 .rules-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:24px 28px; }
 .rules-grid article { display:flex; gap:12px; }
 .rules-grid b { flex:0 0 28px; color:rgba(216,182,106,.5); font-family:Georgia,serif; font-size:20px; }
 .rules-grid h3 { margin:0 0 5px; font-size:14px; }
 .rules-grid p { margin:0; color:var(--muted); font-size:11px; line-height:1.7; }
 .modal-confirm { display:block; margin:0 auto 25px; min-width:130px; }
+.restart-modal { text-align:center; padding:30px; }
+.restart-modal > p:not(.eyebrow) { margin:12px 0 24px; color:var(--muted); font-size:13px; line-height:1.7; }
+.modal-actions { display:flex; justify-content:center; gap:10px; }
 .result-modal { text-align:center; padding:30px; }
 .result-icon { width:62px; height:62px; display:grid; place-items:center; margin:0 auto 14px; border:1px solid var(--gold); border-radius:50%; color:#26311f; background:linear-gradient(145deg,#f1d58e,#ac7f34); font-family:"Songti SC","Noto Serif SC",serif; font-size:27px; box-shadow:0 0 35px rgba(216,182,106,.22); }
 .result-modal > p:not(.eyebrow) { color:var(--muted); font-size:13px; }
-.ranking { display:flex; justify-content:center; gap:8px; margin:23px 0; }
-.rank-item { min-width:90px; padding:12px 8px; border:1px solid rgba(255,255,255,.12); border-radius:8px; background:rgba(0,0,0,.12); font-size:12px; }
+.ranking { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:23px 0; }
+.rank-item { min-width:0; padding:12px 8px; border:1px solid rgba(255,255,255,.12); border-radius:8px; background:rgba(0,0,0,.12); font-size:12px; }
 .rank-item b { display:block; margin-bottom:5px; color:var(--gold-bright); font-family:Georgia,serif; font-size:18px; }
 
-.toast { position:fixed; z-index:20; left:50%; top:95px; transform:translate(-50%,-15px); padding:9px 16px; color:#fff; background:rgba(116,28,25,.94); border:1px solid rgba(255,170,160,.35); border-radius:7px; font-size:12px; opacity:0; pointer-events:none; transition:.2s ease; }
+.toast { position:fixed; z-index:20; left:50%; top:95px; width:max-content; max-width:calc(100vw - 24px); transform:translate(-50%,-15px); padding:9px 16px; color:#fff; background:rgba(116,28,25,.94); border:1px solid rgba(255,170,160,.35); border-radius:7px; font-size:12px; text-align:center; opacity:0; pointer-events:none; transition:.2s ease; }
 .toast.show { opacity:1; transform:translate(-50%,0); }
 
 @keyframes deal-in { from { opacity:0; transform:translateY(-9px) scale(.94); } to { opacity:1; transform:none; } }
@@ -229,7 +232,8 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .game-button { height:42px; }
   .hand-scroll { left:2%; right:2%; bottom:16px; }
   .team-badge { display:none; }
-  .match-score { top:12px; right:10px; transform:scale(.88); transform-origin:top right; }
+  .match-score { top:12px; right:10px; gap:8px; padding:7px 9px; transform:scale(.88); transform-origin:top right; }
+  .score-team small { display:none; }
   .rules-grid { grid-template-columns:1fr; }
   .game-footer #footer-tip { display:none; }
 }
@@ -241,6 +245,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .icon-button, .new-game-button { width:40px; height:40px; }
   .new-game-button { margin-left:0; }
   .round-meta { gap:0; font-size:11px; }
+  .ranking { grid-template-columns:repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-height: 740px) and (min-width:761px) {
