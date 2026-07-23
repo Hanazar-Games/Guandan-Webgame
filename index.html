@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#071b18" />
     <meta name="description" content="四人掼蛋单机对局" />
-    <title>掼蛋 · 牌桌</title>
+    <title>掼蛋 · 牌桌 v0.2</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -26,13 +26,16 @@
         </div>
 
         <div class="header-actions">
-          <button class="icon-button" id="sound-button" type="button" aria-label="关闭音效" title="音效">
+          <button class="icon-button" id="sound-button" type="button" aria-label="关闭音效" aria-pressed="true" title="音效">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Zm12.5 3a4.5 4.5 0 0 0-2.1-3.8v7.6a4.5 4.5 0 0 0 2.1-3.8Zm-2.1-7.7v2.1a6.5 6.5 0 0 1 0 11.2v2.1a8.5 8.5 0 0 0 0-15.4Z"/></svg>
+          </button>
+          <button class="icon-button off" id="music-button" type="button" aria-label="开启背景音乐" aria-pressed="false" title="背景音乐">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h6V3h-8ZM8 19a2 2 0 1 1 2-2 2 2 0 0 1-2 2Z"/></svg>
           </button>
           <button class="icon-button" id="help-button" type="button" aria-label="查看规则" title="规则">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18h2v-2h-2v2Zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm0-14a4 4 0 0 0-4 4h2a2 2 0 1 1 3.4 1.4c-1.3 1.3-2.4 2.1-2.4 4.1h2c0-1.2.7-1.8 1.8-2.9A4 4 0 0 0 12 6Z"/></svg>
           </button>
-          <button class="new-game-button" id="new-game-button" type="button">重新开局</button>
+          <button class="new-game-button" id="new-game-button" type="button">重开本局</button>
         </div>
       </header>
 
@@ -116,14 +119,14 @@
       </section>
 
       <footer class="game-footer">
-        <span><i class="online-dot"></i>单机练习</span>
+        <span><i class="online-dot"></i>单机练习 <small class="version-tag">v0.2.0</small></span>
         <span id="footer-tip">你的搭档坐在对面</span>
       </footer>
     </main>
 
-    <dialog id="rules-dialog" class="modal">
+    <dialog id="rules-dialog" class="modal" aria-labelledby="rules-title">
       <div class="modal-head">
-        <div><span>新手指南</span><h2>基础规则</h2></div>
+        <div><span>新手指南</span><h2 id="rules-title">基础规则</h2></div>
         <button type="button" id="close-rules" aria-label="关闭规则">×</button>
       </div>
       <div class="rules-grid">
@@ -131,11 +134,13 @@
         <article><b>02</b><div><h3>同型压制</h3><p>非炸弹牌需张数、牌型一致且点数更大；炸弹可压制普通牌型。</p></div></article>
         <article><b>03</b><div><h3>逢人配</h3><p>红桃级牌可充当除大小王以外的任意牌，单独打出时仍是级牌。</p></div></article>
         <article><b>04</b><div><h3>本版支持</h3><p>单张、对子、三张、三带二、顺子、三连对、钢板、同花顺与炸弹。</p></div></article>
+        <article><b>05</b><div><h3>炸弹层级</h3><p>同花顺高于五张炸弹、低于六张炸弹；四王炸为最大牌型。</p></div></article>
+        <article><b>06</b><div><h3>快捷操作</h3><p>牌桌空白处可用 Enter 出牌、空格不出、H 获取提示。</p></div></article>
       </div>
       <button class="game-button primary modal-confirm" id="confirm-rules" type="button">知道了</button>
     </dialog>
 
-    <dialog id="result-dialog" class="modal result-modal">
+    <dialog id="result-dialog" class="modal result-modal" aria-labelledby="result-title" aria-describedby="result-copy">
       <div class="result-icon">冠</div>
       <p class="eyebrow">本局结束</p>
       <h2 id="result-title">我方获胜</h2>

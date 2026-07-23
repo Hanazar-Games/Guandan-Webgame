@@ -23,7 +23,9 @@
     finishOrder: [],
     locked: false,
     sound: true,
+    music: false,
     timer: null,
+    resultTimer: null,
     history: [],
     teamLevels: ["2", "2"],
     teamWins: [0, 0],
@@ -37,7 +39,7 @@
   function initElements() {
     ["round-number", "level-rank", "status-text", "played-by", "played-cards", "combo-label",
       "selection-tip", "player-hand", "pass-button", "hint-button", "play-button", "new-game-button",
-      "help-button", "sound-button", "rules-dialog", "close-rules", "confirm-rules", "result-dialog",
+      "help-button", "sound-button", "music-button", "rules-dialog", "close-rules", "confirm-rules", "result-dialog",
       "result-title", "result-copy", "ranking", "again-button", "toast", "footer-tip",
       "our-level", "their-level", "our-wins", "their-wins"
     ].forEach(id => el[id] = byId(id));
@@ -122,7 +124,7 @@
 
     const sequence = sequenceHigh(unique, n);
     if (n === 5 && sequence !== null) {
-      const fixedSuits = cards.filter((c, i) => !isWild(c) || assignedRanks?.[i] === c.rank).map(c => c.suit);
+      const fixedSuits = cards.filter(c => !isWild(c)).map(c => c.suit);
       const sameSuit = fixedSuits.length <= 1 || fixedSuits.every(s => s === fixedSuits[0]);
       if (sameSuit) return { type: "straightflush", value: sequence, size: n, bombPower: 550 + sequence };
       return { type: "straight", value: sequence, size: n };
@@ -197,23 +199,22 @@
 
   function cardMarkup(card, selectable = false) {
     const red = card.suit === "♥" || card.suit === "♦" || card.big;
-    const classes = ["card", red ? "red" : "", card.joker ? "card-joker" : "", isWild(card) ? "wild" : ""].filter(Boolean).join(" ");
+    const selected = selectable && state.selected.has(card.id);
+    const classes = ["card", red ? "red" : "", card.joker ? "card-joker" : "", isWild(card) ? "wild" : "", selected ? "selected" : ""].filter(Boolean).join(" ");
     const rankText = card.joker ? (card.big ? "大王" : "小王") : card.rank;
     const center = card.joker ? (card.big ? "王" : "王") : card.suit;
     const aria = card.joker ? rankText : `${card.suit}${card.rank}${isWild(card) ? "，逢人配" : ""}`;
-    return `<button class="${classes}" ${selectable ? `data-card-id="${card.id}"` : "tabindex=\"-1\""} type="button" aria-label="${aria}">
+    const tag = selectable ? "button" : "div";
+    const attributes = selectable ? `data-card-id="${card.id}" type="button" aria-pressed="${selected}"` : 'role="img"';
+    return `<${tag} class="${classes}" ${attributes} aria-label="${aria}">
       <span class="card-corner"><span>${card.joker ? (card.big ? "大王" : "小王") : card.rank}</span>${card.joker ? "" : `<span class="card-suit">${card.suit}</span>`}</span>
       <span class="card-center">${center}</span>
-    </button>`;
+    </${tag}>`;
   }
 
   function renderHand() {
     sortHand(state.hands[0]);
     el["player-hand"].innerHTML = state.hands[0].map(c => cardMarkup(c, true)).join("");
-    state.selected.forEach(id => {
-      const card = el["player-hand"].querySelector(`[data-card-id="${CSS.escape(id)}"]`);
-      if (card) card.classList.add("selected");
-    });
   }
 
   function renderOpponents() {
@@ -279,6 +280,7 @@
     const id = card.dataset.cardId;
     if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
     card.classList.toggle("selected", state.selected.has(id));
+    card.setAttribute("aria-pressed", String(state.selected.has(id)));
     updateSelectionTip();
     playTone(310 + state.selected.size * 15, .025);
   }
@@ -366,10 +368,14 @@
     playTone(160, .08);
   }
 
-  function findAIMove(hand, target) {
+  function findAIMove(hand, target, teammateLeading = false) {
     sortHand(hand);
     const candidates = [];
+    const seen = new Set();
     const add = cards => {
+      const key = cards.map(c => c.id).sort().join("|");
+      if (seen.has(key)) return;
+      seen.add(key);
       const combo = detectCombo(cards);
       if (combo && canBeat(combo, target)) candidates.push({ cards, combo });
     };
@@ -382,35 +388,47 @@
     });
     const wilds = hand.filter(isWild);
     for (const cards of groups.values()) {
-      if (cards.length >= 2) add(cards.slice(0, 2));
-      if (cards.length >= 3) add(cards.slice(0, 3));
-      if (cards.length >= 4) {
-        for (let n = 4; n <= cards.length; n++) add(cards.slice(0, n));
+      for (let n = 2; n <= cards.length + wilds.length; n++) {
+        const naturalCount = Math.min(cards.length, n);
+        add([...cards.slice(0, naturalCount), ...wilds.slice(0, n - naturalCount)]);
       }
-      if (wilds.length) {
-        if (cards.length === 1) add([cards[0], wilds[0]]);
-        if (cards.length === 2) add([...cards.slice(0, 2), wilds[0]]);
-        if (cards.length === 3) add([...cards.slice(0, 3), wilds[0]]);
+    }
+    if (wilds.length >= 2) add(wilds.slice(0, 2));
+
+    const jokers = hand.filter(c => c.joker);
+    if (jokers.length === 4) add(jokers);
+
+    for (const tripleRank of RANKS) {
+      for (const pairRank of RANKS) {
+        if (tripleRank === pairRank) continue;
+        const triple = (groups.get(tripleRank) || []).slice(0, 3);
+        const pair = (groups.get(pairRank) || []).slice(0, 2);
+        const needed = 3 - triple.length + 2 - pair.length;
+        if (needed <= wilds.length) {
+          add([...triple, ...pair, ...wilds.slice(0, needed)]);
+        }
       }
     }
 
-    const triples = [...groups.values()].filter(g => g.length >= 3);
-    const pairs = [...groups.values()].filter(g => g.length >= 2);
-    for (const t of triples) for (const p of pairs) if (t[0].rank !== p[0].rank) add([...t.slice(0, 3), ...p.slice(0, 2)]);
-
-    const byNatural = new Map();
-    hand.filter(c => !c.joker && !isWild(c)).forEach(c => {
-      if (!byNatural.has(c.rank)) byNatural.set(c.rank, []);
-      byNatural.get(c.rank).push(c);
-    });
-    for (let start = 2; start <= 10; start++) {
-      const seq = [];
-      for (let v = start; v < start + 5; v++) {
-        const rank = RANKS.find(r => naturalValue(r) === v);
-        if (byNatural.get(rank)?.length) seq.push(byNatural.get(rank)[0]);
+    const addPattern = (ranks, count, suit = null) => {
+      const cards = [];
+      let needed = 0;
+      for (const rank of ranks) {
+        const matching = (groups.get(rank) || []).filter(c => !c.joker && (!suit || c.suit === suit));
+        cards.push(...matching.slice(0, count));
+        needed += Math.max(0, count - matching.length);
       }
-      if (seq.length === 5) add(seq);
+      if (needed <= wilds.length) add([...cards, ...wilds.slice(0, needed)]);
+    };
+
+    const straights = [["A", "2", "3", "4", "5"]];
+    for (let i = 0; i <= LEVELS.length - 5; i++) straights.push(LEVELS.slice(i, i + 5));
+    for (const ranks of straights) {
+      addPattern(ranks, 1);
+      SUITS.forEach(suit => addPattern(ranks, 1, suit));
     }
+    for (let i = 0; i <= LEVELS.length - 3; i++) addPattern(LEVELS.slice(i, i + 3), 2);
+    for (let i = 0; i <= LEVELS.length - 2; i++) addPattern(LEVELS.slice(i, i + 2), 3);
 
     if (!candidates.length) return null;
     candidates.sort((a, b) => {
@@ -418,7 +436,10 @@
       if (aBomb !== bBomb) return aBomb ? 1 : -1;
       return comboScore(a.combo) - comboScore(b.combo);
     });
+    if (teammateLeading) return candidates.find(c => c.cards.length === hand.length) || null;
     if (!target) {
+      const finishing = candidates.filter(c => c.cards.length === hand.length);
+      if (finishing.length) return finishing[0];
       const nonBomb = candidates.filter(c => !isBomb(c.combo));
       const shedding = nonBomb.filter(c => c.cards.length > 1).sort((a, b) => b.cards.length - a.cards.length || comboScore(a.combo) - comboScore(b.combo));
       return shedding[0] || nonBomb[0] || candidates[0];
@@ -432,17 +453,25 @@
     const player = state.currentPlayer;
     state.timer = setTimeout(() => {
       if (state.locked || state.currentPlayer !== player) return;
-      const move = findAIMove(state.hands[player], state.currentPlay?.combo || null);
+      const teammateLeading = state.lastPlayer !== null && state.lastPlayer % 2 === player % 2;
+      const move = findAIMove(state.hands[player], state.currentPlay?.combo || null, teammateLeading);
       if (move) commitPlay(player, move.cards, move.combo); else commitPass(player);
     }, 620 + Math.random() * 520);
   }
 
   function hint() {
     if (state.currentPlayer !== 0 || state.locked) return;
-    const move = findAIMove(state.hands[0], state.currentPlay?.combo || null);
+    const teammateLeading = state.lastPlayer !== null && state.lastPlayer % 2 === 0;
+    const move = findAIMove(state.hands[0], state.currentPlay?.combo || null, teammateLeading);
     state.selected.clear();
     if (!move) {
       renderHand();
+      if (teammateLeading) {
+        el["selection-tip"].classList.remove("error");
+        el["selection-tip"].textContent = "队友领牌，建议不出";
+        el["footer-tip"].textContent = "保留牌力，让队友继续领牌";
+        return;
+      }
       return invalid(state.currentPlay ? "没有能压过的牌，建议不出" : "暂无可用提示");
     }
     move.cards.forEach(c => state.selected.add(c.id));
@@ -451,8 +480,14 @@
     el["footer-tip"].textContent = `已为你选择：${COMBO_NAMES[move.combo.type]}`;
   }
 
+  function cancelResultDialog() {
+    clearTimeout(state.resultTimer);
+    state.resultTimer = null;
+  }
+
   function startGame(resetMatch = false) {
     clearTimeout(state.timer);
+    cancelResultDialog();
     if (resetMatch) {
       state.round = 1;
       state.level = "2";
@@ -510,7 +545,11 @@
     el["again-button"].textContent = matchCompleted ? "开始新比赛" : "继续下一局";
     el["again-button"].dataset.resetMatch = matchCompleted ? "true" : "false";
     render();
-    setTimeout(() => el["result-dialog"].showModal(), 450);
+    cancelResultDialog();
+    state.resultTimer = setTimeout(() => {
+      state.resultTimer = null;
+      el["result-dialog"].showModal();
+    }, 450);
   }
 
   let toastTimer;
@@ -521,19 +560,82 @@
     toastTimer = setTimeout(() => el.toast.classList.remove("show"), 1800);
   }
 
-  function playTone(frequency, duration) {
-    if (!state.sound) return;
+  const BGM_NOTES = [196, 220, 246.94, 293.66, 329.63, 293.66, 246.94, 220];
+  let audioContext = null;
+  let bgmTimer = null;
+  let bgmStep = 0;
+
+  function getAudioContext() {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = frequency;
-      osc.type = "sine";
-      gain.gain.setValueAtTime(.035, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + duration);
-      osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + duration);
-    } catch (_) { /* 音效是非关键增强 */ }
+      if (!AudioCtx) return null;
+      if (!audioContext) audioContext = new AudioCtx();
+      if (audioContext.state === "suspended") audioContext.resume()?.catch?.(() => {});
+      return audioContext;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function playVoice(frequency, duration, volume, type = "sine") {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+    osc.frequency.value = frequency;
+    osc.type = type;
+    gain.gain.setValueAtTime(.001, now);
+    gain.gain.exponentialRampToValueAtTime(volume, now + .02);
+    gain.gain.exponentialRampToValueAtTime(.001, now + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.addEventListener("ended", () => { osc.disconnect(); gain.disconnect(); }, { once: true });
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  function playTone(frequency, duration) {
+    if (state.sound) playVoice(frequency, duration, .035);
+  }
+
+  function playBGMNote() {
+    if (!state.music || document.hidden) return;
+    const note = BGM_NOTES[bgmStep++ % BGM_NOTES.length];
+    playVoice(note, 1.1, .007, "triangle");
+    if (bgmStep % 4 === 1) playVoice(note / 2, 1.6, .0035);
+  }
+
+  function startBGM() {
+    if (!state.music || bgmTimer || document.hidden) return;
+    playBGMNote();
+    bgmTimer = setInterval(playBGMNote, 1200);
+  }
+
+  function stopBGM() {
+    if (!bgmTimer) return;
+    clearInterval(bgmTimer);
+    bgmTimer = null;
+  }
+
+  function syncAudioButtons() {
+    const controls = [
+      [el["sound-button"], state.sound, "音效"],
+      [el["music-button"], state.music, "背景音乐"]
+    ];
+    controls.forEach(([button, enabled, label]) => {
+      button.classList.toggle("off", !enabled);
+      button.setAttribute("aria-pressed", String(enabled));
+      button.setAttribute("aria-label", `${enabled ? "关闭" : "开启"}${label}`);
+    });
+  }
+
+  function shortcutAction(event) {
+    if (event.target.closest?.("button, dialog")) return null;
+    if (event.key === "Enter") return "play";
+    if (event.key === " ") return "pass";
+    if (event.key === "h" || event.key === "H") return "hint";
+    return null;
   }
 
   function bindEvents() {
@@ -546,17 +648,30 @@
     el["help-button"].addEventListener("click", () => el["rules-dialog"].showModal());
     el["close-rules"].addEventListener("click", () => el["rules-dialog"].close());
     el["confirm-rules"].addEventListener("click", () => el["rules-dialog"].close());
+    el["result-dialog"].addEventListener("cancel", event => event.preventDefault());
     el["sound-button"].addEventListener("click", () => {
       state.sound = !state.sound;
-      el["sound-button"].setAttribute("aria-label", state.sound ? "关闭音效" : "开启音效");
-      el["sound-button"].style.opacity = state.sound ? "1" : ".45";
+      syncAudioButtons();
+      if (state.sound) playTone(520, .08);
       showToast(state.sound ? "音效已开启" : "音效已关闭");
     });
-    document.addEventListener("keydown", event => {
-      if (event.key === "Enter" && state.currentPlayer === 0) humanPlay();
-      if (event.key === " " && state.currentPlayer === 0 && state.currentPlay) { event.preventDefault(); humanPass(); }
-      if ((event.key === "h" || event.key === "H") && state.currentPlayer === 0) hint();
+    el["music-button"].addEventListener("click", () => {
+      state.music = !state.music;
+      if (state.music) startBGM(); else stopBGM();
+      syncAudioButtons();
+      showToast(state.music ? "背景音乐已开启" : "背景音乐已关闭");
     });
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopBGM(); else startBGM();
+    });
+    document.addEventListener("keydown", event => {
+      const action = shortcutAction(event);
+      if (!action || state.currentPlayer !== 0 || state.locked) return;
+      if (action === "play") humanPlay();
+      if (action === "pass" && state.currentPlay) { event.preventDefault(); humanPass(); }
+      if (action === "hint") hint();
+    });
+    syncAudioButtons();
   }
 
   initElements();

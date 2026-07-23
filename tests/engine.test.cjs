@@ -5,14 +5,47 @@ const vm = require("node:vm");
 let source = fs.readFileSync(require.resolve("../script.js"), "utf8");
 source = source.replace(
   "  initElements();",
-  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel };\n  return;\n  initElements();"
+  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, startBGM, stopBGM };\n  return;\n  initElements();"
 );
 
-const context = { console, Math, Set, Map };
+const clearedTimers = [];
+const clearedIntervals = [];
+const intervals = [];
+let audioContexts = 0;
+const audioNode = () => ({ connect() {}, disconnect() {} });
+class FakeAudioContext {
+  constructor() {
+    audioContexts++;
+    this.currentTime = 0;
+    this.destination = {};
+    this.state = "running";
+  }
+  createOscillator() {
+    return { ...audioNode(), frequency: { value: 0 }, type: "sine", start() {}, stop() {}, addEventListener() {} };
+  }
+  createGain() {
+    return {
+      ...audioNode(),
+      gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }
+    };
+  }
+  resume() { return Promise.resolve(); }
+}
+const context = {
+  console, Math, Set, Map,
+  window: { AudioContext: FakeAudioContext },
+  document: { hidden: false },
+  clearTimeout: timer => clearedTimers.push(timer),
+  setInterval: callback => { intervals.push(callback); return intervals.length; },
+  clearInterval: timer => clearedIntervals.push(timer)
+};
 vm.createContext(context);
 vm.runInContext(source, context);
 
-const { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel } = context.__guandanTest;
+const {
+  createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel,
+  cardMarkup, shortcutAction, cancelResultDialog, playTone, startBGM, stopBGM
+} = context.__guandanTest;
 const card = (rank, suit = "♠", copy = 0) => ({ id: `${copy}-${suit}-${rank}`, rank, suit, copy, joker: false });
 const joker = (big, copy = 0) => ({ id: `${copy}-${big ? "BJ" : "SJ"}`, rank: big ? "大王" : "小王", suit: "", copy, joker: true, big });
 const type = cards => detectCombo(cards)?.type;
@@ -44,6 +77,15 @@ assert.equal(isWild(wild), true);
 assert.equal(type([card("K"), wild]), "pair", "逢人配应可补成对子");
 assert.equal(type([card("9"), card("9", "♣"), wild, card("J"), card("J", "♦")]), "fullhouse", "逢人配应可补成三带二");
 
+state.level = "6";
+const flushWild = card("6", "♥");
+assert.equal(
+  type([card("4", "♣"), card("5", "♣"), flushWild, card("7", "♣"), card("8", "♣")]),
+  "straightflush",
+  "逢人配应能替代同点数的其他花色组成同花顺"
+);
+state.level = "2";
+
 const pair5 = detectCombo([card("5"), card("5", "♣")]);
 const pair8 = detectCombo([card("8"), card("8", "♣")]);
 const bomb4 = detectCombo([card("4"), card("4", "♥"), card("4", "♣"), card("4", "♦")]);
@@ -56,7 +98,81 @@ const aiMove = findAIMove(aiHand, pair5);
 assert.equal(aiMove.combo.type, "pair");
 assert.equal(aiMove.combo.value > pair5.value, true, "AI 应选择能够压制的对子");
 
+const teammateLead = detectCombo([card("5")]);
+assert.equal(findAIMove([card("6"), card("K")], teammateLead, true), null, "队友领牌时 AI 应保留手牌");
+assert.equal(
+  findAIMove([card("6")], teammateLead, true).combo.type,
+  "single",
+  "队友领牌时仍应允许 AI 一手出完"
+);
+
+const aiStraight = findAIMove([card("A"), card("2", "♣"), card("3"), card("4"), card("5")], null);
+assert.equal(aiStraight.combo.type, "straight", "AI 应识别 A2345");
+
+const aiPairs = findAIMove([
+  card("3"), card("3", "♣", 1), card("4"), card("4", "♣", 1), card("5"), card("5", "♣", 1)
+], null);
+assert.equal(aiPairs.combo.type, "pairs", "AI 应主动打出三连对");
+
+const aiSteel = findAIMove([
+  card("8"), card("8", "♥"), card("8", "♣"), card("9"), card("9", "♥"), card("9", "♣")
+], null);
+assert.equal(aiSteel.combo.type, "steel", "AI 应主动打出钢板");
+
+const aiJokerBomb = findAIMove(
+  [joker(false), joker(false, 1), joker(true), joker(true, 1)],
+  { type: "bomb", value: 13, size: 8, bombPower: 813 }
+);
+assert.equal(aiJokerBomb.combo.type, "jokerbomb", "AI 应能用四王炸压制其他炸弹");
+
+const aiWildFullhouse = findAIMove([
+  card("9"), card("9", "♣"), wild, card("J"), card("J", "♦")
+], null);
+assert.equal(aiWildFullhouse.combo.type, "fullhouse", "AI 应使用逢人配组成三带二");
+
+state.level = "6";
+const aiWildFlush = findAIMove([
+  card("4", "♣"), card("5", "♣"), flushWild, card("7", "♣"), card("8", "♣")
+], null);
+assert.equal(aiWildFlush.combo.type, "straightflush", "整手可出完时 AI 应使用逢人配同花顺");
+state.level = "2";
+
+const markupCard = card("3");
+assert.match(cardMarkup(markupCard, true), /^<button/);
+assert.match(cardMarkup(markupCard, true), /aria-pressed="false"/, "手牌应暴露未选中状态");
+state.selected.add(markupCard.id);
+assert.match(cardMarkup(markupCard, true), /aria-pressed="true"/, "手牌应暴露已选中状态");
+state.selected.clear();
+assert.match(cardMarkup(markupCard), /^<div/, "桌面展示牌不应伪装成按钮");
+assert.match(cardMarkup(markupCard), /role="img"/);
+
+playTone(300, .05);
+playTone(400, .05);
+assert.equal(audioContexts, 1, "所有音效应复用同一个 AudioContext");
+state.music = true;
+startBGM();
+startBGM();
+assert.equal(intervals.length, 1, "背景音乐只能启动一个调度器");
+stopBGM();
+assert.deepEqual(clearedIntervals, [1]);
+state.music = false;
+
+const shortcutEvent = (key, interactive = false) => ({
+  key,
+  target: { closest: () => interactive ? {} : null }
+});
+assert.equal(shortcutAction(shortcutEvent("Enter")), "play");
+assert.equal(shortcutAction(shortcutEvent(" ")), "pass");
+assert.equal(shortcutAction(shortcutEvent("H")), "hint");
+assert.equal(shortcutAction(shortcutEvent("Enter", true)), null, "按钮和弹窗内应保留原生键盘行为");
+assert.equal(shortcutAction(shortcutEvent("Escape")), null);
+
+state.resultTimer = 123;
+cancelResultDialog();
+assert.equal(state.resultTimer, null);
+assert.deepEqual(clearedTimers, [123], "重新开局前应取消待显示的旧结果弹窗");
+
 assert.equal(advanceLevel("2", 3), "5");
 assert.equal(advanceLevel("K", 3), "A", "升级不得越过 A");
 
-console.log("规则引擎测试通过：牌堆、10 类牌型、逢人配、压制关系、AI 跟牌与升级。");
+console.log("规则引擎测试通过：牌堆、10 类牌型、逢人配、压制关系、AI 组合与升级。");

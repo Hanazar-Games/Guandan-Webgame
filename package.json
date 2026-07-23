@@ -1,10 +1,10 @@
 {
   "name": "guandan-webgame",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "四人掼蛋单机 Web 游戏",
   "scripts": {
     "start": "python3 -m http.server 4173",
-    "test": "node tests/engine.test.cjs"
+    "test": "node tests/engine.test.cjs && node tests/ui.test.cjs && node tests/release.test.cjs"
   }
 }
