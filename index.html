@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#071b18" />
     <meta name="description" content="四人掼蛋单机对局" />
-    <title>掼蛋 · 牌桌 v0.3</title>
+    <title>掼蛋 · 牌桌 v0.4</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -105,11 +105,11 @@
         </section>
 
         <div class="action-area">
-          <p class="selection-tip" id="selection-tip">请选择要出的牌</p>
+          <p class="selection-tip" id="selection-tip" aria-live="polite">请选择要出的牌</p>
           <div class="action-buttons">
-            <button class="game-button secondary" id="pass-button" type="button">不出</button>
-            <button class="game-button secondary" id="hint-button" type="button">提示</button>
-            <button class="game-button primary" id="play-button" type="button">出牌</button>
+            <button class="game-button secondary" id="pass-button" type="button" aria-keyshortcuts="Space">不出</button>
+            <button class="game-button secondary" id="hint-button" type="button" aria-keyshortcuts="H">提示</button>
+            <button class="game-button primary" id="play-button" type="button" aria-keyshortcuts="Enter">出牌</button>
           </div>
         </div>
 
@@ -119,7 +119,7 @@
       </section>
 
       <footer class="game-footer">
-        <span><i class="online-dot"></i>单机练习 <small class="version-tag">v0.3.0</small></span>
+        <span><i class="online-dot"></i>单机练习 <small class="version-tag">v0.4.0</small></span>
         <span id="footer-tip">你的搭档坐在对面</span>
       </footer>
     </main>

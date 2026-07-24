@@ -78,8 +78,19 @@ vm.runInContext(source, context);
 assert.equal(context.__guandanState.hands.map(hand => hand.length).join(","), "27,27,27,27");
 assert.match(html, /id="player-hand"[^>]*role="group"/, "手牌容器应向读屏声明为一组控件");
 assert.match(elements.get("player-hand").innerHTML, /aria-pressed="false"/);
+assert.equal(elements.get("play-button").disabled, true, "未选择合法牌型时不应允许出牌");
 assert.equal(elements.get("sound-button").attributes.get("aria-pressed"), "true");
 assert.equal(elements.get("music-button").attributes.get("aria-pressed"), "false");
+assert.equal(elements.get("sound-button").attributes.get("title"), "关闭音效");
+assert.equal(elements.get("music-button").attributes.get("title"), "开启背景音乐");
+
+const firstCard = context.__guandanState.hands[0][0];
+const cardButton = new FakeElement("selected-card");
+cardButton.dataset.cardId = firstCard.id;
+cardButton.closest = () => cardButton;
+elements.get("player-hand").listeners.get("click")[0]({ target: cardButton });
+assert.equal(elements.get("play-button").disabled, false, "合法单张选中后应立即允许出牌");
+assert.equal(cardButton.attributes.get("aria-pressed"), "true");
 
 const musicClicks = elements.get("music-button").listeners.get("click");
 assert.equal(musicClicks.length, 1);
@@ -118,5 +129,8 @@ assert.match(css, /\.modal-head button\s*\{[^}]*min-width:\s*44px;[^}]*min-heigh
 assert.match(css, /\.toast\s*\{[^}]*max-width:\s*calc\(100vw - 24px\);/s, "Toast 在窄屏不得越界");
 assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*?\.score-team small\s*\{\s*display:\s*none;/, "移动端计分牌应隐藏次要胜局信息");
 assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.ranking\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/s, "移动结果排名应使用 2×2 布局");
+assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.action-area\s*\{[^}]*right:\s*12px;[^}]*left:\s*auto;/s, "窄屏操作区应避开底部玩家信息");
+assert.match(html, /id="selection-tip"[^>]*aria-live="polite"/, "选牌结果应以礼貌模式向读屏播报");
+assert.match(html, /id="play-button"[^>]*aria-keyshortcuts="Enter"/, "主要操作应公开键盘快捷键");
 
 console.log("UI 启动测试通过：DOM、发牌、牌面语义、音频控制和弹窗事件均已接线。");

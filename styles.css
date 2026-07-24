@@ -66,9 +66,10 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   background: rgba(255,255,255,.055); border-radius: 8px; cursor: pointer;
   transition: .18s ease;
 }
-.icon-button { width: 40px; padding: 9px; }
+.icon-button { position:relative; width: 40px; padding: 9px; }
 .icon-button svg { width: 100%; fill: currentColor; }
 .icon-button.off { opacity:.45; }
+.icon-button.off::after { content:""; position:absolute; width:23px; height:2px; left:8px; top:18px; border-radius:2px; background:currentColor; transform:rotate(-42deg); }
 .new-game-button { padding: 0 16px; margin-left: 5px; color: var(--gold-bright); }
 
 .table-wrap {
@@ -142,13 +143,15 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .combo-label { display:inline-block; min-height:23px; margin-top:6px; padding:3px 10px; color:var(--gold-bright); font-size:11px; border-radius:10px; background:rgba(4,30,26,.38); }
 
 .action-area { position:absolute; bottom:142px; left:50%; transform:translateX(-50%); z-index:8; text-align:center; }
-.selection-tip { height:20px; margin:0 0 7px; color:rgba(255,255,255,.55); font-size:11px; }
+.selection-tip { min-height:20px; margin:0 0 7px; color:rgba(255,255,255,.55); font-size:11px; line-height:1.45; }
 .selection-tip.error { color:#ffaaa0; }
+.selection-tip.valid { color:#dff7df; }
 .action-buttons { display:flex; gap:10px; }
 .game-button { min-width:88px; height:38px; padding:0 19px; border-radius:7px; cursor:pointer; font-weight:600; font-size:13px; letter-spacing:1px; transition:.16s ease; }
 .game-button.secondary { color:var(--ink); background:rgba(2,29,25,.76); border:1px solid rgba(255,255,255,.22); }
 .game-button.primary { color:#2c2110; background:linear-gradient(180deg,#f0d795,#cda75c); border:1px solid #f8e3a9; box-shadow:0 6px 15px rgba(15,15,5,.27), inset 0 1px rgba(255,255,255,.5); }
 .game-button:disabled { opacity:.35; cursor:not-allowed; }
+.game-button:active:not(:disabled) { transform:translateY(1px); filter:brightness(.96); }
 
 .hand-scroll { position:absolute; left:18%; right:2%; bottom:15px; height:117px; z-index:7; overflow-x:auto; overflow-y:visible; scrollbar-width:thin; scrollbar-color:rgba(216,182,106,.45) transparent; }
 .hand { min-width:max-content; height:106px; display:flex; align-items:flex-end; padding:14px 34px 0 16px; }
@@ -156,7 +159,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   position:relative; flex:0 0 var(--card-w); width:var(--card-w); height:var(--card-h); margin-left:calc(var(--card-w) * -.39);
   border:1px solid #d9d6ca; border-radius:clamp(5px,.55vw,8px); color:#171916; background:linear-gradient(135deg,#fff 0%,#f5f2e8 100%);
   box-shadow:-2px 5px 9px rgba(0,0,0,.28), inset 0 0 0 2px rgba(255,255,255,.7);
-  cursor:pointer; user-select:none; transform:translateY(0); transition:transform .14s ease, filter .14s ease, box-shadow .14s ease;
+  cursor:pointer; user-select:none; touch-action:manipulation; transform:translateY(0); transition:transform .14s ease, filter .14s ease, box-shadow .14s ease;
 }
 .card:first-child { margin-left:0; }
 .card.selected { transform:translateY(-20px); box-shadow:-2px 8px 14px rgba(0,0,0,.34), 0 0 0 2px var(--gold-bright); }
@@ -242,10 +245,17 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .topbar { padding:0 9px; }
   .brand > div { display:none; }
   .header-actions { gap:3px; }
-  .icon-button, .new-game-button { width:40px; height:40px; }
+  .icon-button, .new-game-button { width:44px; height:44px; }
   .new-game-button { margin-left:0; }
   .round-meta { gap:0; font-size:11px; }
+  .action-area { right:12px; left:auto; width:220px; transform:none; }
+  .action-buttons { gap:8px; }
+  .game-button { min-width:68px; height:44px; padding:0 10px; }
   .ranking { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width:360px) {
+  .player-you .player-copy { display:none; }
 }
 
 @media (max-height: 740px) and (min-width:761px) {

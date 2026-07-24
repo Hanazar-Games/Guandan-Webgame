@@ -249,7 +249,8 @@
     renderCurrentPlay();
 
     const humanTurn = state.currentPlayer === 0 && !state.locked && !state.finishOrder.includes(0);
-    el["play-button"].disabled = !humanTurn;
+    const selectedCombo = detectCombo(selectedCards());
+    el["play-button"].disabled = !humanTurn || !canBeat(selectedCombo, state.currentPlay?.combo);
     el["hint-button"].disabled = !humanTurn;
     el["pass-button"].disabled = !humanTurn || !state.currentPlay;
     el["status-text"].textContent = state.locked ? "本局已经结束" : humanTurn ? "轮到你出牌" : `${NAMES[state.currentPlayer]} 正在思考`;
@@ -267,7 +268,11 @@
   function updateSelectionTip() {
     const cards = selectedCards();
     const combo = detectCombo(cards);
+    const playable = canBeat(combo, state.currentPlay?.combo);
+    const humanTurn = state.currentPlayer === 0 && !state.locked && !state.finishOrder.includes(0);
+    el["play-button"].disabled = !humanTurn || !playable;
     el["selection-tip"].classList.remove("error");
+    el["selection-tip"].classList.toggle("valid", playable);
     if (!cards.length) el["selection-tip"].textContent = "请选择要出的牌";
     else if (!combo) el["selection-tip"].textContent = `已选 ${cards.length} 张 · 暂不构成合法牌型`;
     else if (!canBeat(combo, state.currentPlay?.combo)) el["selection-tip"].textContent = `${COMBO_NAMES[combo.type]} · 压不过上家`;
@@ -282,7 +287,7 @@
     card.classList.toggle("selected", state.selected.has(id));
     card.setAttribute("aria-pressed", String(state.selected.has(id)));
     updateSelectionTip();
-    playTone(310 + state.selected.size * 15, .025);
+    playSfx("select", state.selected.size);
   }
 
   function removeCards(player, cards) {
@@ -296,7 +301,7 @@
     state.lastPlayer = player;
     state.passCount = 0;
     state.history.push({ player, action: "play", combo: combo.type, count: cards.length });
-    playTone(isBomb(combo) ? 120 : 420, isBomb(combo) ? .16 : .07);
+    playSfx(isBomb(combo) ? "bomb" : "play");
 
     if (!state.hands[player].length && !state.finishOrder.includes(player)) {
       state.finishOrder.push(player);
@@ -343,6 +348,7 @@
   function commitPass(player) {
     state.passCount++;
     state.history.push({ player, action: "pass" });
+    playSfx("pass");
     const activeCount = 4 - state.finishOrder.length;
     const leaderActive = !state.finishOrder.includes(state.lastPlayer);
     const passesToReset = activeCount - (leaderActive ? 1 : 0);
@@ -365,7 +371,7 @@
     el["selection-tip"].textContent = message;
     el["selection-tip"].classList.add("error");
     showToast(message);
-    playTone(160, .08);
+    playSfx("error");
   }
 
   function findAIMove(hand, target, teammateLeading = false) {
@@ -466,6 +472,7 @@
     state.selected.clear();
     if (!move) {
       renderHand();
+      updateSelectionTip();
       if (teammateLeading) {
         el["selection-tip"].classList.remove("error");
         el["selection-tip"].textContent = "队友领牌，建议不出";
@@ -477,6 +484,7 @@
     move.cards.forEach(c => state.selected.add(c.id));
     renderHand();
     updateSelectionTip();
+    playSfx("hint");
     el["footer-tip"].textContent = `已为你选择：${COMBO_NAMES[move.combo.type]}`;
   }
 
@@ -546,6 +554,7 @@
     state.round++;
     el["again-button"].textContent = matchCompleted ? "开始新比赛" : "继续下一局";
     el["again-button"].dataset.resetMatch = matchCompleted ? "true" : "false";
+    playSfx(ourWin ? "win" : "finish");
     render();
     cancelResultDialog();
     state.resultTimer = setTimeout(() => {
@@ -569,7 +578,8 @@
     el.toast.textContent = "";
   }
 
-  const BGM_NOTES = [196, 220, 246.94, 293.66, 329.63, 293.66, 246.94, 220];
+  const BGM_MELODY = [196, 220, 246.94, null, 293.66, 246.94, 220, null, 196, 246.94, 293.66, 329.63, 293.66, null, 246.94, 220];
+  const BGM_BASS = [98, 110, 123.47, 110];
   let audioContext = null;
   let bgmTimer = null;
   let bgmStep = 0;
@@ -587,7 +597,7 @@
     }
   }
 
-  function playVoice(frequency, duration, volume, type = "sine", voices = null) {
+  function playVoice(frequency, duration, volume, type = "sine", voices = null, delay = 0) {
     const ctx = getAudioContext();
     if (!ctx) return false;
     try {
@@ -595,11 +605,12 @@
       const gain = ctx.createGain();
       const voice = { osc, gain };
       const now = ctx.currentTime;
+      const start = now + delay;
       osc.frequency.value = frequency;
       osc.type = type;
-      gain.gain.setValueAtTime(.001, now);
-      gain.gain.exponentialRampToValueAtTime(volume, now + .02);
-      gain.gain.exponentialRampToValueAtTime(.001, now + duration);
+      gain.gain.setValueAtTime(.001, start);
+      gain.gain.exponentialRampToValueAtTime(volume, start + .02);
+      gain.gain.exponentialRampToValueAtTime(.001, start + duration);
       osc.connect(gain);
       gain.connect(ctx.destination);
       voices?.add(voice);
@@ -608,8 +619,8 @@
         osc.disconnect();
         gain.disconnect();
       }, { once: true });
-      osc.start(now);
-      osc.stop(now + duration);
+      osc.start(start);
+      osc.stop(start + duration);
       return true;
     } catch (_) {
       return false;
@@ -620,19 +631,36 @@
     if (state.sound) playVoice(frequency, duration, .035);
   }
 
+  function playSfx(kind, detail = 0) {
+    if (!state.sound) return;
+    const voices = {
+      select: [[300 + Math.min(detail, 8) * 18, .035, .022, "sine", 0]],
+      pass: [[220, .07, .018, "sine", 0]],
+      hint: [[480, .06, .025, "triangle", 0], [720, .09, .018, "triangle", .045]],
+      play: [[410, .065, .028, "triangle", 0], [620, .1, .022, "sine", .045]],
+      bomb: [[105, .24, .045, "sawtooth", 0], [158, .2, .035, "square", .035]],
+      error: [[170, .09, .028, "square", 0], [125, .12, .022, "sawtooth", .055]],
+      toggle: [[520, .07, .025, "sine", 0], [780, .08, .018, "sine", .045]],
+      finish: [[220, .18, .025, "triangle", 0], [196, .24, .02, "triangle", .12]],
+      win: [[392, .12, .026, "triangle", 0], [493.88, .16, .024, "triangle", .08], [587.33, .28, .022, "triangle", .17]]
+    }[kind] || [];
+    voices.forEach(([frequency, duration, volume, type, delay]) => playVoice(frequency, duration, volume, type, null, delay));
+  }
+
   function playBGMNote() {
     if (!state.music || document.hidden) return false;
-    const note = BGM_NOTES[bgmStep++ % BGM_NOTES.length];
-    const played = playVoice(note, 1.1, .007, "triangle", bgmVoices);
-    if (bgmStep % 4 === 1) playVoice(note / 2, 1.6, .0035, "sine", bgmVoices);
-    return played;
+    const step = bgmStep++ % BGM_MELODY.length;
+    const note = BGM_MELODY[step];
+    const played = note ? playVoice(note, .85, .006, "triangle", bgmVoices) : false;
+    const bass = step % 4 === 0 && playVoice(BGM_BASS[step / 4], 2.6, .003, "sine", bgmVoices);
+    return played || bass;
   }
 
   function startBGM() {
     if (!state.music || document.hidden) return false;
     if (bgmTimer) return true;
     if (!getAudioContext() || !playBGMNote()) return false;
-    bgmTimer = setInterval(playBGMNote, 1200);
+    bgmTimer = setInterval(playBGMNote, 1050);
     return true;
   }
 
@@ -658,7 +686,9 @@
     controls.forEach(([button, enabled, label]) => {
       button.classList.toggle("off", !enabled);
       button.setAttribute("aria-pressed", String(enabled));
-      button.setAttribute("aria-label", `${enabled ? "关闭" : "开启"}${label}`);
+      const action = `${enabled ? "关闭" : "开启"}${label}`;
+      button.setAttribute("aria-label", action);
+      button.setAttribute("title", action);
     });
   }
 
@@ -692,7 +722,7 @@
     el["sound-button"].addEventListener("click", () => {
       state.sound = !state.sound;
       syncAudioButtons();
-      if (state.sound) playTone(520, .08);
+      if (state.sound) playSfx("toggle");
       showToast(state.sound ? "音效已开启" : "音效已关闭");
     });
     el["music-button"].addEventListener("click", () => {
@@ -716,7 +746,7 @@
     document.addEventListener("keydown", event => {
       const action = shortcutAction(event);
       if (!action || state.currentPlayer !== 0 || state.locked) return;
-      if (action === "play") humanPlay();
+      if (action === "play" && !el["play-button"].disabled) humanPlay();
       if (action === "pass" && state.currentPlay) { event.preventDefault(); humanPass(); }
       if (action === "hint") hint();
     });

@@ -5,7 +5,7 @@ const vm = require("node:vm");
 let source = fs.readFileSync(require.resolve("../script.js"), "utf8");
 source = source.replace(
   "  initElements();",
-  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, startBGM, stopBGM };\n  return;\n  initElements();"
+  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM };\n  return;\n  initElements();"
 );
 
 const clearedTimers = [];
@@ -13,6 +13,7 @@ const clearedIntervals = [];
 const intervals = [];
 let audioContexts = 0;
 let oscillatorStops = 0;
+let oscillatorStarts = 0;
 const audioNode = () => ({ connect() {}, disconnect() {} });
 class FakeAudioContext {
   constructor() {
@@ -23,7 +24,7 @@ class FakeAudioContext {
   }
   createOscillator() {
     return {
-      ...audioNode(), frequency: { value: 0 }, type: "sine", start() {},
+      ...audioNode(), frequency: { value: 0 }, type: "sine", start() { oscillatorStarts++; },
       stop() { oscillatorStops++; }, addEventListener() {}
     };
   }
@@ -48,7 +49,7 @@ vm.runInContext(source, context);
 
 const {
   createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel,
-  cardMarkup, shortcutAction, cancelResultDialog, playTone, startBGM, stopBGM
+  cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM
 } = context.__guandanTest;
 const card = (rank, suit = "♠", copy = 0) => ({ id: `${copy}-${suit}-${rank}`, rank, suit, copy, joker: false });
 const joker = (big, copy = 0) => ({ id: `${copy}-${big ? "BJ" : "SJ"}`, rank: big ? "大王" : "小王", suit: "", copy, joker: true, big });
@@ -162,6 +163,12 @@ assert.match(cardMarkup(markupCard), /role="img"/);
 playTone(300, .05);
 playTone(400, .05);
 assert.equal(audioContexts, 1, "所有音效应复用同一个 AudioContext");
+const basicToneStarts = oscillatorStarts;
+playSfx("play");
+assert.equal(oscillatorStarts - basicToneStarts >= 2, true, "出牌音效应使用分层声部而非单一短音");
+const playStarts = oscillatorStarts;
+playSfx("bomb");
+assert.equal(oscillatorStarts - playStarts >= 2, true, "炸弹应有独立的分层音效");
 state.music = true;
 startBGM();
 startBGM();
