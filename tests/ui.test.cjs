@@ -46,6 +46,10 @@ class FakeElement {
 
 const elements = new Map([...html.matchAll(/\sid="([^"]+)"/g)].map(match => [match[1], new FakeElement(match[1])]));
 const statusDot = new FakeElement("status-dot");
+let selectionReveals = 0;
+elements.get("player-hand").querySelector = selector => selector === ".selected"
+  ? { scrollIntoView: () => { selectionReveals++; } }
+  : null;
 const documentListeners = new Map();
 const document = {
   hidden: false,
@@ -113,6 +117,9 @@ elements.get("confirm-restart").listeners.get("click")[0]();
 assert.equal(context.__guandanState.history.length, 0, "确认重开后才应重新发牌");
 assert.equal(elements.get("toast").classList.contains("show"), false, "重开后不应残留上一局 Toast");
 
+elements.get("hint-button").listeners.get("click")[0]();
+assert.equal(selectionReveals, 1, "提示选牌后应将结果滚动到可视区域");
+
 restartDialog.showModal();
 let restartPrevented = false;
 restartDialog.listeners.get("cancel")[0]({ preventDefault: () => { restartPrevented = true; } });
@@ -129,8 +136,24 @@ assert.match(css, /\.modal-head button\s*\{[^}]*min-width:\s*44px;[^}]*min-heigh
 assert.match(css, /\.toast\s*\{[^}]*max-width:\s*calc\(100vw - 24px\);/s, "Toast 在窄屏不得越界");
 assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*?\.score-team small\s*\{\s*display:\s*none;/, "移动端计分牌应隐藏次要胜局信息");
 assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.ranking\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/s, "移动结果排名应使用 2×2 布局");
-assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.action-area\s*\{[^}]*right:\s*12px;[^}]*left:\s*auto;/s, "窄屏操作区应避开底部玩家信息");
+assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.action-area\s*\{[^}]*right:\s*8px;[^}]*left:\s*auto;/s, "窄屏操作区应避开底部玩家信息");
 assert.match(html, /id="selection-tip"[^>]*aria-live="polite"/, "选牌结果应以礼貌模式向读屏播报");
 assert.match(html, /id="play-button"[^>]*aria-keyshortcuts="Enter"/, "主要操作应公开键盘快捷键");
+
+for (const id of ["sound-button", "music-button", "help-button", "new-game-button", "pass-button", "hint-button", "play-button"]) {
+  const markup = html.match(new RegExp(`<button[^>]*id="${id}"[\\s\\S]*?<\\/button>`))?.[0] || "";
+  assert.match(markup, /<svg[^>]*class="[^"]*control-icon/, `#${id} 应使用统一的描边图标`);
+}
+assert.match(html, /id="new-game-button"[^>]*aria-label="重开本局"[^>]*title="重开本局"/, "重开按钮在仅显示图标时仍应保留清晰名称");
+assert.match(html, /id="help-button"[^>]*title="查看规则"/, "帮助按钮提示文本应与可访问名称一致");
+assert.match(css, /\.control-icon\s*\{[^}]*fill:\s*none;[^}]*stroke:\s*currentColor;/s, "控件应使用统一描边图标样式");
+assert.match(css, /\.icon-button\[aria-pressed="true"\]\s*\{[^}]*color:\s*var\(--gold-bright\);/s, "已开启的音频控制应有明确视觉状态");
+assert.match(css, /\.game-button span\s*\{[^}]*white-space:\s*nowrap;/s, "操作按钮文字不得因图标挤压而换行");
+assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.action-area\s*\{[^}]*width:\s*224px;/s, "窄屏操作区应为图标与文字预留足够宽度");
+assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*135px;[^}]*transform:\s*translateX\(-50%\);/s, "极窄屏中央状态应避开顶部牌背");
+assert.match(css, /\.new-game-button\s*\{[^}]*white-space:\s*nowrap;[^}]*flex-shrink:\s*0;/s, "平板工具栏不得压缩重开按钮文字");
+assert.match(css, /\.game-button\s*\{[^}]*height:\s*44px;/s, "主要操作在所有视口都应满足 44px 触摸目标");
+assert.match(css, /@media \(max-height:\s*740px\) and \(min-width:761px\)[\s\S]*?\.table-wrap\s*\{[^}]*min-height:\s*506px;/s, "短屏模式必须覆盖牌桌全局最小高度");
+assert.match(css, /@media \(max-height:\s*740px\) and \(min-width:761px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*23%;[^}]*transform:\s*translateX\(-50%\);/s, "短屏中央状态不得受内容高度影响并遮挡顶部牌背");
 
 console.log("UI 启动测试通过：DOM、发牌、牌面语义、音频控制和弹窗事件均已接线。");

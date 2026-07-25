@@ -217,6 +217,13 @@
     el["player-hand"].innerHTML = state.hands[0].map(c => cardMarkup(c, true)).join("");
   }
 
+  function revealSelection() {
+    const card = el["player-hand"].querySelector(".selected");
+    if (!card) return;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    card.scrollIntoView?.({ behavior: reducedMotion ? "auto" : "smooth", block: "nearest", inline: "center" });
+  }
+
   function renderOpponents() {
     for (let i = 1; i < 4; i++) {
       const count = state.hands[i].length;
@@ -484,6 +491,7 @@
     move.cards.forEach(c => state.selected.add(c.id));
     renderHand();
     updateSelectionTip();
+    revealSelection();
     playSfx("hint");
     el["footer-tip"].textContent = `已为你选择：${COMBO_NAMES[move.combo.type]}`;
   }

@@ -26,16 +26,19 @@
         </div>
 
         <div class="header-actions">
-          <button class="icon-button" id="sound-button" type="button" aria-label="关闭音效" aria-pressed="true" title="音效">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Zm12.5 3a4.5 4.5 0 0 0-2.1-3.8v7.6a4.5 4.5 0 0 0 2.1-3.8Zm-2.1-7.7v2.1a6.5 6.5 0 0 1 0 11.2v2.1a8.5 8.5 0 0 0 0-15.4Z"/></svg>
+          <button class="icon-button" id="sound-button" type="button" aria-label="关闭音效" aria-pressed="true" title="关闭音效">
+            <svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4Z"/><path d="M16 9.5a4 4 0 0 1 0 5"/><path d="M18.5 7a7.5 7.5 0 0 1 0 10"/></svg>
           </button>
-          <button class="icon-button off" id="music-button" type="button" aria-label="开启背景音乐" aria-pressed="false" title="背景音乐">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h6V3h-8ZM8 19a2 2 0 1 1 2-2 2 2 0 0 1-2 2Z"/></svg>
+          <button class="icon-button off" id="music-button" type="button" aria-label="开启背景音乐" aria-pressed="false" title="开启背景音乐">
+            <svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>
           </button>
-          <button class="icon-button" id="help-button" type="button" aria-label="查看规则" title="规则">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18h2v-2h-2v2Zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm0-14a4 4 0 0 0-4 4h2a2 2 0 1 1 3.4 1.4c-1.3 1.3-2.4 2.1-2.4 4.1h2c0-1.2.7-1.8 1.8-2.9A4 4 0 0 0 12 6Z"/></svg>
+          <button class="icon-button" id="help-button" type="button" aria-label="查看规则" title="查看规则">
+            <svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.5 2.5 0 1 1 3.7 2.2c-.9.5-1.4 1.1-1.4 2.3"/><path d="M12 17h.01"/></svg>
           </button>
-          <button class="new-game-button" id="new-game-button" type="button">重开本局</button>
+          <button class="new-game-button" id="new-game-button" type="button" aria-label="重开本局" title="重开本局">
+            <svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+            <span class="button-label">重开本局</span>
+          </button>
         </div>
       </header>
 
@@ -107,9 +110,9 @@
         <div class="action-area">
           <p class="selection-tip" id="selection-tip" aria-live="polite">请选择要出的牌</p>
           <div class="action-buttons">
-            <button class="game-button secondary" id="pass-button" type="button" aria-keyshortcuts="Space">不出</button>
-            <button class="game-button secondary" id="hint-button" type="button" aria-keyshortcuts="H">提示</button>
-            <button class="game-button primary" id="play-button" type="button" aria-keyshortcuts="Enter">出牌</button>
+            <button class="game-button secondary" id="pass-button" type="button" aria-keyshortcuts="Space" title="不出（空格）"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg><span>不出</span></button>
+            <button class="game-button secondary" id="hint-button" type="button" aria-keyshortcuts="H" title="提示（H）"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17h6M10 20h4"/><path d="M8.5 14.5A6 6 0 1 1 15.5 14.5c-.8.6-1.1 1.2-1.1 2.5h-4.8c0-1.3-.3-1.9-1.1-2.5Z"/></svg><span>提示</span></button>
+            <button class="game-button primary" id="play-button" type="button" aria-keyshortcuts="Enter" title="出牌（Enter）"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M7 10l5-5 5 5"/></svg><span>出牌</span></button>
           </div>
         </div>
 

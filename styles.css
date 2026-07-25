@@ -62,15 +62,16 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 
 .header-actions { justify-self: end; display: flex; align-items: center; gap: 8px; }
 .icon-button, .new-game-button {
-  height: 40px; border: 1px solid rgba(255,255,255,.14); color: var(--ink);
+  height: 44px; display:inline-flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,.14); color: var(--ink);
   background: rgba(255,255,255,.055); border-radius: 8px; cursor: pointer;
   transition: .18s ease;
 }
-.icon-button { position:relative; width: 40px; padding: 9px; }
-.icon-button svg { width: 100%; fill: currentColor; }
-.icon-button.off { opacity:.45; }
-.icon-button.off::after { content:""; position:absolute; width:23px; height:2px; left:8px; top:18px; border-radius:2px; background:currentColor; transform:rotate(-42deg); }
-.new-game-button { padding: 0 16px; margin-left: 5px; color: var(--gold-bright); }
+.control-icon { width:20px; height:20px; flex:none; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.icon-button { position:relative; width:44px; flex-shrink:0; padding:11px; }
+.icon-button.off { opacity:.58; }
+.icon-button.off::after { content:""; position:absolute; width:24px; height:2px; left:9px; top:20px; border:1px solid rgba(2,17,15,.85); border-radius:2px; background:currentColor; transform:rotate(-42deg); }
+.icon-button[aria-pressed="true"] { color:var(--gold-bright); background:rgba(216,182,106,.1); border-color:rgba(216,182,106,.38); }
+.new-game-button { gap:8px; padding:0 15px; margin-left:5px; color:var(--gold-bright); white-space:nowrap; flex-shrink:0; }
 
 .table-wrap {
   position: relative; min-height: 630px; overflow: hidden;
@@ -147,7 +148,9 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .selection-tip.error { color:#ffaaa0; }
 .selection-tip.valid { color:#dff7df; }
 .action-buttons { display:flex; gap:10px; }
-.game-button { min-width:88px; height:38px; padding:0 19px; border-radius:7px; cursor:pointer; font-weight:600; font-size:13px; letter-spacing:1px; transition:.16s ease; }
+.game-button { min-width:88px; height:44px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 16px; border-radius:9px; cursor:pointer; font-weight:600; font-size:13px; letter-spacing:1px; transition:.16s ease; }
+.game-button .control-icon { width:17px; height:17px; }
+.game-button span { white-space:nowrap; }
 .game-button.secondary { color:var(--ink); background:rgba(2,29,25,.76); border:1px solid rgba(255,255,255,.22); }
 .game-button.primary { color:#2c2110; background:linear-gradient(180deg,#f0d795,#cda75c); border:1px solid #f8e3a9; box-shadow:0 6px 15px rgba(15,15,5,.27), inset 0 1px rgba(255,255,255,.5); }
 .game-button:disabled { opacity:.35; cursor:not-allowed; }
@@ -220,8 +223,8 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .brand p, .round-meta i, .round-meta div:first-child { display:none; }
   .brand-mark { width:38px; height:38px; }
   .round-meta { position:static; transform:none; justify-self:center; }
-  .new-game-button { width:38px; padding:0; overflow:hidden; color:transparent; position:relative; }
-  .new-game-button::after { content:"↻"; color:var(--gold-bright); position:absolute; inset:0; display:grid; place-items:center; font-size:21px; }
+  .new-game-button { width:44px; padding:0; margin-left:0; }
+  .new-game-button .button-label { display:none; }
   .table-wrap::before { inset:8px; border-radius:35% / 18%; }
   .table-wrap { min-height:570px; }
   .player-left { left:12px; top:35%; }
@@ -246,23 +249,24 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .brand > div { display:none; }
   .header-actions { gap:3px; }
   .icon-button, .new-game-button { width:44px; height:44px; }
-  .new-game-button { margin-left:0; }
   .round-meta { gap:0; font-size:11px; }
-  .action-area { right:12px; left:auto; width:220px; transform:none; }
-  .action-buttons { gap:8px; }
-  .game-button { min-width:68px; height:44px; padding:0 10px; }
+  .action-area { right:8px; left:auto; width:224px; transform:none; }
+  .action-buttons { gap:6px; }
+  .game-button { flex:1; min-width:0; height:44px; gap:5px; padding:0 6px; }
   .ranking { grid-template-columns:repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width:360px) {
   .player-you .player-copy { display:none; }
+  .trick-zone { top:135px; transform:translateX(-50%); }
 }
 
 @media (max-height: 740px) and (min-width:761px) {
-  .game-shell { grid-template-rows:66px minmax(550px,1fr) 28px; }
+  .game-shell { grid-template-rows:66px minmax(506px,calc(100dvh - 94px)) 28px; }
+  .table-wrap { min-height:506px; }
   .player-top { top:12px; }
   .opponent-top { top:75px; }
-  .trick-zone { top:36%; }
+  .trick-zone { top:23%; transform:translateX(-50%); }
   .action-area { bottom:128px; }
   .hand-scroll { height:105px; }
   .player-you { bottom:72px; }
