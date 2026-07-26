@@ -151,6 +151,21 @@ const aiWildFlush = findAIMove([
 assert.equal(aiWildFlush.combo.type, "straightflush", "整手可出完时 AI 应使用逢人配同花顺");
 state.level = "2";
 
+const responseBomb = [card("9"), card("9", "♥"), card("9", "♣"), card("9", "♦")];
+const bombFinish = findAIMove(responseBomb, pair8);
+assert.equal(bombFinish.combo.type, "bomb", "整手炸弹能压制时 AI 应直接出完而非只拆一对");
+assert.equal(bombFinish.cards.length, 4);
+
+const protectedBombLead = findAIMove([
+  card("3"), card("3", "♥"), card("3", "♣"), card("3", "♦"), card("5"), card("5", "♣"), card("K")
+], null);
+assert.equal(protectedBombLead.combo.type, "pair", "AI 领牌时应优先打安全对子而非拆炸弹组成三带二");
+assert.equal(protectedBombLead.cards.every(item => item.rank === "5"), true);
+
+const protectedBombResponse = findAIMove([...responseBomb, card("K")], pair8);
+assert.equal(protectedBombResponse.combo.type, "bomb", "无法用普通牌压制时 AI 应整组出炸弹而非拆成对子");
+assert.equal(protectedBombResponse.cards.length, 4);
+
 const markupCard = card("3");
 assert.match(cardMarkup(markupCard, true), /^<button/);
 assert.match(cardMarkup(markupCard, true), /aria-pressed="false"/, "手牌应暴露未选中状态");
@@ -159,6 +174,14 @@ assert.match(cardMarkup(markupCard, true), /aria-pressed="true"/, "手牌应暴�
 state.selected.clear();
 assert.match(cardMarkup(markupCard), /^<div/, "桌面展示牌不应伪装成按钮");
 assert.match(cardMarkup(markupCard), /role="img"/);
+
+state.level = "3";
+assert.match(cardMarkup(markupCard, true), /level-card/, "所有花色的当前级牌都应有大牌标识");
+assert.match(cardMarkup(markupCard, true), /aria-label="[^"]*级牌/, "级牌身份应向读屏公开");
+assert.match(cardMarkup(card("3", "♥"), true), /wild/, "红桃级牌仍应标记为逢人配");
+assert.match(cardMarkup(card("3", "♥"), true), /逢人配/);
+assert.match(cardMarkup(joker(true), true), /joker-big/, "大王应具备独立视觉类名");
+state.level = "2";
 
 playTone(300, .05);
 playTone(400, .05);

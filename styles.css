@@ -147,12 +147,14 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .selection-tip { min-height:20px; margin:0 0 7px; color:rgba(255,255,255,.55); font-size:11px; line-height:1.45; }
 .selection-tip.error { color:#ffaaa0; }
 .selection-tip.valid { color:#dff7df; }
+.selection-tip.power { color:var(--gold-bright); font-weight:700; text-shadow:0 0 12px rgba(216,182,106,.35); }
 .action-buttons { display:flex; gap:10px; }
 .game-button { min-width:88px; height:44px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 16px; border-radius:9px; cursor:pointer; font-weight:600; font-size:13px; letter-spacing:1px; transition:.16s ease; }
 .game-button .control-icon { width:17px; height:17px; }
 .game-button span { white-space:nowrap; }
 .game-button.secondary { color:var(--ink); background:rgba(2,29,25,.76); border:1px solid rgba(255,255,255,.22); }
 .game-button.primary { color:#2c2110; background:linear-gradient(180deg,#f0d795,#cda75c); border:1px solid #f8e3a9; box-shadow:0 6px 15px rgba(15,15,5,.27), inset 0 1px rgba(255,255,255,.5); }
+.game-button.primary.power { color:#fff4d2; background:linear-gradient(180deg,#a83b31,#6f211f); border-color:#e5a468; box-shadow:0 0 18px rgba(196,70,48,.3), inset 0 1px rgba(255,255,255,.2); }
 .game-button:disabled { opacity:.35; cursor:not-allowed; }
 .game-button:active:not(:disabled) { transform:translateY(1px); filter:brightness(.96); }
 
@@ -167,12 +169,14 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .card:first-child { margin-left:0; }
 .card.selected { transform:translateY(-20px); box-shadow:-2px 8px 14px rgba(0,0,0,.34), 0 0 0 2px var(--gold-bright); }
 .card.red { color:#b52927; }
-.card.wild::after { content:"配"; position:absolute; right:5px; bottom:5px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; color:#fff8db; background:#bd3330; font-size:9px; font-weight:800; }
+.card.level-card::after { content:"级"; position:absolute; right:5px; bottom:5px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; color:#35250f; background:linear-gradient(145deg,#f3d98f,#bf9450); font-size:9px; font-weight:800; box-shadow:0 1px 4px rgba(0,0,0,.22); }
+.card.wild::after { content:"配"; color:#fff8db; background:#bd3330; }
 .card-corner { position:absolute; top:5px; left:6px; display:flex; flex-direction:column; align-items:center; line-height:.9; font-family:Georgia,serif; font-weight:700; font-size:clamp(14px,1.45vw,20px); }
 .card-suit { margin-top:4px; font-size:.75em; }
 .card-center { position:absolute; inset:20% 8% 10%; display:grid; place-items:center; font-size:clamp(28px,3.1vw,46px); opacity:.9; }
 .card-joker .card-corner { top:6px; font-size:clamp(8px,.75vw,11px); line-height:1.05; writing-mode:vertical-rl; letter-spacing:1px; }
 .card-joker .card-center { font-family:"Songti SC","Noto Serif SC",serif; font-size:clamp(22px,2.3vw,34px); }
+.card-joker.joker-big { border-color:#d3aa5d; background:linear-gradient(135deg,#fffdf3,#f5e7c7); box-shadow:-2px 5px 9px rgba(0,0,0,.28), inset 0 0 0 2px rgba(218,174,91,.2); }
 
 .game-footer { display:flex; justify-content:space-between; align-items:center; padding:0 max(clamp(18px,3vw,48px),env(safe-area-inset-right,0px)) 0 max(clamp(18px,3vw,48px),env(safe-area-inset-left,0px)); color:rgba(255,255,255,.62); background:#030b0a; font-size:11px; letter-spacing:1px; }
 .game-footer span { display:flex; align-items:center; gap:6px; }
@@ -235,7 +239,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .trick-zone { top:36%; width:72vw; }
   .played-cards .card { --card-w:45px; margin-left:-19px; }
   .action-area { bottom:151px; }
-  .game-button { height:42px; }
+  .game-button { height:44px; }
   .hand-scroll { left:2%; right:2%; bottom:16px; }
   .team-badge { display:none; }
   .match-score { top:12px; right:10px; gap:8px; padding:7px 9px; transform:scale(.88); transform-origin:top right; }
@@ -258,6 +262,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 
 @media (max-width:360px) {
   .player-you .player-copy { display:none; }
+  .match-score { display:none; }
   .trick-zone { top:135px; transform:translateX(-50%); }
 }
 
@@ -270,6 +275,51 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .action-area { bottom:128px; }
   .hand-scroll { height:105px; }
   .player-you { bottom:72px; }
+}
+
+@media (max-height:650px) and (max-width:760px) {
+  :root { --card-w:44px; }
+  .game-shell { grid-template-rows:60px minmax(484px,calc(100dvh - 84px)) 24px; }
+  .table-wrap { min-height:484px; }
+  .player-top { top:8px; }
+  .opponent-top { top:65px; }
+  .match-score { top:8px; }
+  .trick-zone { top:115px; min-height:110px; transform:translateX(-50%); }
+  .played-by { height:16px; margin-top:4px; }
+  .played-cards { min-height:60px; }
+  .played-cards .card { --card-w:40px; }
+  .combo-label { min-height:19px; margin-top:0; }
+  .action-area { bottom:103px; }
+  .selection-tip { margin-bottom:4px; }
+  .player-you { bottom:84px; }
+  .hand-scroll { bottom:4px; height:94px; }
+  .hand { height:86px; padding-top:10px; }
+}
+
+@media (max-height:500px) and (min-width:761px) {
+  .game-shell { grid-template-rows:56px minmax(310px,calc(100dvh - 80px)) 24px; }
+  .topbar { padding:0 24px; }
+  .brand-mark { width:36px; height:36px; }
+  .brand p { display:none; }
+  .table-wrap { min-height:310px; }
+  .table-wrap::before { inset:8px; }
+  .team-badge { display:none; }
+  .match-score { top:8px; right:24px; transform:scale(.85); transform-origin:top right; }
+  .player-top { top:4px; }
+  .opponent-top { top:58px; }
+  .opponent-left, .opponent-right { display:none; }
+  .player-left, .player-right { top:35%; }
+  .trick-zone { top:86px; width:45vw; min-height:100px; transform:translateX(-50%); }
+  .played-by { height:15px; margin-top:3px; }
+  .played-cards { min-height:48px; }
+  .played-cards .card { --card-w:38px; margin-left:-15px; }
+  .combo-label { min-height:19px; margin-top:0; }
+  .action-area { right:16px; bottom:12px; left:auto; transform:none; }
+  .selection-tip { margin-bottom:4px; }
+  .player-you { left:20px; bottom:22px; }
+  .player-you .player-copy { display:none; }
+  .hand-scroll { right:40%; bottom:4px; left:9%; height:92px; }
+  .hand { height:85px; padding-top:10px; }
 }
 
 @media (prefers-reduced-motion:reduce) {

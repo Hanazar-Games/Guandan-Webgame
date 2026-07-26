@@ -199,11 +199,12 @@
 
   function cardMarkup(card, selectable = false) {
     const red = card.suit === "♥" || card.suit === "♦" || card.big;
+    const levelCard = !card.joker && card.rank === state.level;
     const selected = selectable && state.selected.has(card.id);
-    const classes = ["card", red ? "red" : "", card.joker ? "card-joker" : "", isWild(card) ? "wild" : "", selected ? "selected" : ""].filter(Boolean).join(" ");
+    const classes = ["card", red ? "red" : "", card.joker ? "card-joker" : "", card.big ? "joker-big" : "", levelCard ? "level-card" : "", isWild(card) ? "wild" : "", selected ? "selected" : ""].filter(Boolean).join(" ");
     const rankText = card.joker ? (card.big ? "大王" : "小王") : card.rank;
     const center = card.joker ? (card.big ? "王" : "王") : card.suit;
-    const aria = card.joker ? rankText : `${card.suit}${card.rank}${isWild(card) ? "，逢人配" : ""}`;
+    const aria = card.joker ? rankText : `${card.suit}${card.rank}${levelCard ? "，级牌" : ""}${isWild(card) ? "，逢人配" : ""}`;
     const tag = selectable ? "button" : "div";
     const attributes = selectable ? `data-card-id="${card.id}" type="button" aria-pressed="${selected}"` : 'role="img"';
     return `<${tag} class="${classes}" ${attributes} aria-label="${aria}">
@@ -276,10 +277,13 @@
     const cards = selectedCards();
     const combo = detectCombo(cards);
     const playable = canBeat(combo, state.currentPlay?.combo);
+    const power = playable && isBomb(combo);
     const humanTurn = state.currentPlayer === 0 && !state.locked && !state.finishOrder.includes(0);
     el["play-button"].disabled = !humanTurn || !playable;
+    el["play-button"].classList.toggle("power", power);
     el["selection-tip"].classList.remove("error");
     el["selection-tip"].classList.toggle("valid", playable);
+    el["selection-tip"].classList.toggle("power", power);
     if (!cards.length) el["selection-tip"].textContent = "请选择要出的牌";
     else if (!combo) el["selection-tip"].textContent = `已选 ${cards.length} 张 · 暂不构成合法牌型`;
     else if (!canBeat(combo, state.currentPlay?.combo)) el["selection-tip"].textContent = `${COMBO_NAMES[combo.type]} · 压不过上家`;
@@ -444,20 +448,28 @@
     for (let i = 0; i <= LEVELS.length - 2; i++) addPattern(LEVELS.slice(i, i + 2), 3);
 
     if (!candidates.length) return null;
-    candidates.sort((a, b) => {
+    const bombGroups = [...groups.values()]
+      .filter(cards => !cards[0]?.joker && cards.length >= 4)
+      .map(cards => new Set(cards.map(card => card.id)));
+    const safeCandidates = candidates.filter(candidate => !bombGroups.some(group => {
+      const used = candidate.cards.filter(card => group.has(card.id)).length;
+      return used > 0 && used < group.size;
+    }));
+    const pool = safeCandidates.length ? safeCandidates : candidates;
+    pool.sort((a, b) => {
       const aBomb = isBomb(a.combo), bBomb = isBomb(b.combo);
       if (aBomb !== bBomb) return aBomb ? 1 : -1;
       return comboScore(a.combo) - comboScore(b.combo);
     });
-    if (teammateLeading) return candidates.find(c => c.cards.length === hand.length) || null;
+    const finishing = pool.filter(candidate => candidate.cards.length === hand.length);
+    if (finishing.length) return finishing[0];
+    if (teammateLeading) return null;
     if (!target) {
-      const finishing = candidates.filter(c => c.cards.length === hand.length);
-      if (finishing.length) return finishing[0];
-      const nonBomb = candidates.filter(c => !isBomb(c.combo));
+      const nonBomb = pool.filter(c => !isBomb(c.combo));
       const shedding = nonBomb.filter(c => c.cards.length > 1).sort((a, b) => b.cards.length - a.cards.length || comboScore(a.combo) - comboScore(b.combo));
-      return shedding[0] || nonBomb[0] || candidates[0];
+      return shedding[0] || nonBomb[0] || pool[0];
     }
-    return candidates[0];
+    return pool[0];
   }
 
   function scheduleAI() {
@@ -564,6 +576,7 @@
     el["again-button"].dataset.resetMatch = matchCompleted ? "true" : "false";
     playSfx(ourWin ? "win" : "finish");
     render();
+    updateSelectionTip();
     cancelResultDialog();
     state.resultTimer = setTimeout(() => {
       state.resultTimer = null;

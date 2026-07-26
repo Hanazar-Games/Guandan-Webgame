@@ -5,7 +5,7 @@ const vm = require("node:vm");
 const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
 const css = fs.readFileSync(require.resolve("../styles.css"), "utf8");
 let source = fs.readFileSync(require.resolve("../script.js"), "utf8");
-source = source.replace("  initElements();", "  globalThis.__guandanState = state;\n  initElements();");
+source = source.replace("  initElements();", "  globalThis.__guandanState = state;\n  globalThis.__guandanTest = { endGame };\n  initElements();");
 
 class FakeClassList {
   constructor() { this.values = new Set(); }
@@ -120,6 +120,14 @@ assert.equal(elements.get("toast").classList.contains("show"), false, "重开后
 elements.get("hint-button").listeners.get("click")[0]();
 assert.equal(selectionReveals, 1, "提示选牌后应将结果滚动到可视区域");
 
+elements.get("play-button").classList.add("power");
+elements.get("selection-tip").classList.add("power");
+context.__guandanState.finishOrder = [0, 2, 1, 3];
+context.__guandanState.selected.clear();
+context.__guandanTest.endGame();
+assert.equal(elements.get("play-button").classList.contains("power"), false, "本局结束后出牌按钮不得残留炸弹状态");
+assert.equal(elements.get("selection-tip").classList.contains("power"), false, "本局结束后选牌提示不得残留炸弹状态");
+
 restartDialog.showModal();
 let restartPrevented = false;
 restartDialog.listeners.get("cancel")[0]({ preventDefault: () => { restartPrevented = true; } });
@@ -151,9 +159,16 @@ assert.match(css, /\.icon-button\[aria-pressed="true"\]\s*\{[^}]*color:\s*var\(-
 assert.match(css, /\.game-button span\s*\{[^}]*white-space:\s*nowrap;/s, "操作按钮文字不得因图标挤压而换行");
 assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.action-area\s*\{[^}]*width:\s*224px;/s, "窄屏操作区应为图标与文字预留足够宽度");
 assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*135px;[^}]*transform:\s*translateX\(-50%\);/s, "极窄屏中央状态应避开顶部牌背");
+assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*?\.match-score\s*\{[^}]*display:\s*none;/s, "极窄屏应隐藏次要计分牌以免遮挡队友信息");
 assert.match(css, /\.new-game-button\s*\{[^}]*white-space:\s*nowrap;[^}]*flex-shrink:\s*0;/s, "平板工具栏不得压缩重开按钮文字");
-assert.match(css, /\.game-button\s*\{[^}]*height:\s*44px;/s, "主要操作在所有视口都应满足 44px 触摸目标");
+assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*?\.game-button\s*\{[^}]*height:\s*44px;/s, "主要操作在移动视口也应满足 44px 触摸目标");
+assert.doesNotMatch(css, /\.game-button\s*\{[^}]*height:\s*42px;/s, "任何视口都不得把主要操作缩小到 44px 以下");
 assert.match(css, /@media \(max-height:\s*740px\) and \(min-width:761px\)[\s\S]*?\.table-wrap\s*\{[^}]*min-height:\s*506px;/s, "短屏模式必须覆盖牌桌全局最小高度");
+assert.match(css, /@media \(max-height:\s*650px\) and \(max-width:760px\)[\s\S]*?\.table-wrap\s*\{[^}]*min-height:\s*484px;/s, "小屏竖屏牌桌应完整收进常见 568px 视口");
+assert.match(css, /@media \(max-height:\s*500px\) and \(min-width:761px\)[\s\S]*?\.table-wrap\s*\{[^}]*min-height:\s*310px;/s, "小屏横屏牌桌应完整收进 390px 视口");
+assert.match(css, /@media \(max-height:\s*500px\) and \(min-width:761px\)[\s\S]*?\.opponent-left,\s*\.opponent-right\s*\{[^}]*display:\s*none;/s, "小屏横屏应隐藏侧边牌背以免挤占操作区");
+assert.match(css, /\.card\.level-card::after\s*\{[^}]*content:\s*"级";/s, "级牌应有清晰的大牌徽标");
+assert.match(css, /\.selection-tip\.power\s*\{[^}]*color:\s*var\(--gold-bright\);/s, "炸弹等大牌组合应使用强化反馈");
 assert.match(css, /@media \(max-height:\s*740px\) and \(min-width:761px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*23%;[^}]*transform:\s*translateX\(-50%\);/s, "短屏中央状态不得受内容高度影响并遮挡顶部牌背");
 
 console.log("UI 启动测试通过：DOM、发牌、牌面语义、音频控制和弹窗事件均已接线。");
