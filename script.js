@@ -200,13 +200,14 @@
   function cardMarkup(card, selectable = false) {
     const red = card.suit === "♥" || card.suit === "♦" || card.big;
     const levelCard = !card.joker && card.rank === state.level;
+    const interactive = state.currentPlayer === 0 && !state.locked && !state.finishOrder.includes(0);
     const selected = selectable && state.selected.has(card.id);
     const classes = ["card", red ? "red" : "", card.joker ? "card-joker" : "", card.big ? "joker-big" : "", levelCard ? "level-card" : "", isWild(card) ? "wild" : "", selected ? "selected" : ""].filter(Boolean).join(" ");
     const rankText = card.joker ? (card.big ? "大王" : "小王") : card.rank;
     const center = card.joker ? (card.big ? "王" : "王") : card.suit;
     const aria = card.joker ? rankText : `${card.suit}${card.rank}${levelCard ? "，级牌" : ""}${isWild(card) ? "，逢人配" : ""}`;
     const tag = selectable ? "button" : "div";
-    const attributes = selectable ? `data-card-id="${card.id}" type="button" aria-pressed="${selected}"` : 'role="img"';
+    const attributes = selectable ? `data-card-id="${card.id}" type="button" aria-pressed="${selected}"${interactive ? "" : " disabled"}` : 'role="img"';
     return `<${tag} class="${classes}" ${attributes} aria-label="${aria}">
       <span class="card-corner"><span>${card.joker ? (card.big ? "大王" : "小王") : card.rank}</span>${card.joker ? "" : `<span class="card-suit">${card.suit}</span>`}</span>
       <span class="card-center">${center}</span>
@@ -261,6 +262,8 @@
     el["play-button"].disabled = !humanTurn || !canBeat(selectedCombo, state.currentPlay?.combo);
     el["hint-button"].disabled = !humanTurn;
     el["pass-button"].disabled = !humanTurn || !state.currentPlay;
+    el["new-game-button"].disabled = state.locked;
+    el["help-button"].disabled = state.locked;
     el["status-text"].textContent = state.locked ? "本局已经结束" : humanTurn ? "轮到你出牌" : `${NAMES[state.currentPlayer]} 正在思考`;
     document.querySelector(".status-dot").classList.toggle("thinking", !humanTurn && !state.locked);
     el["our-level"].textContent = state.teamLevels[0];
@@ -275,10 +278,19 @@
 
   function updateSelectionTip() {
     const cards = selectedCards();
+    const humanTurn = state.currentPlayer === 0 && !state.locked && !state.finishOrder.includes(0);
+    if (!humanTurn) {
+      el["play-button"].disabled = true;
+      el["play-button"].classList.toggle("power", false);
+      el["selection-tip"].classList.remove("error");
+      el["selection-tip"].classList.toggle("valid", false);
+      el["selection-tip"].classList.toggle("power", false);
+      el["selection-tip"].textContent = state.locked ? "本局已结束" : `等待${NAMES[state.currentPlayer]}出牌`;
+      return;
+    }
     const combo = detectCombo(cards);
     const playable = canBeat(combo, state.currentPlay?.combo);
     const power = playable && isBomb(combo);
-    const humanTurn = state.currentPlayer === 0 && !state.locked && !state.finishOrder.includes(0);
     el["play-button"].disabled = !humanTurn || !playable;
     el["play-button"].classList.toggle("power", power);
     el["selection-tip"].classList.remove("error");
@@ -332,6 +344,7 @@
     state.currentPlayer = nextActive(fromPlayer);
     render();
     updateSelectionTip();
+    if (state.currentPlayer === 0) playSfx("turn");
     scheduleAI();
   }
 
@@ -375,6 +388,7 @@
     state.currentPlayer = next;
     render();
     updateSelectionTip();
+    if (state.currentPlayer === 0) playSfx("turn");
     scheduleAI();
   }
 
@@ -451,9 +465,9 @@
     const bombGroups = [...groups.values()]
       .filter(cards => !cards[0]?.joker && cards.length >= 4)
       .map(cards => new Set(cards.map(card => card.id)));
-    const safeCandidates = candidates.filter(candidate => !bombGroups.some(group => {
+    const safeCandidates = candidates.filter(candidate => isBomb(candidate.combo) || !bombGroups.some(group => {
       const used = candidate.cards.filter(card => group.has(card.id)).length;
-      return used > 0 && used < group.size;
+      return used > 0 && group.size - used < 4;
     }));
     const pool = safeCandidates.length ? safeCandidates : candidates;
     pool.sort((a, b) => {
@@ -474,14 +488,32 @@
 
   function scheduleAI() {
     clearTimeout(state.timer);
-    if (state.locked || state.currentPlayer === 0) return;
+    state.timer = null;
+    if (state.locked || state.currentPlayer === 0 || document.hidden || el["rules-dialog"].open || el["restart-dialog"].open) return;
     const player = state.currentPlayer;
     state.timer = setTimeout(() => {
       if (state.locked || state.currentPlayer !== player) return;
+      state.timer = null;
       const teammateLeading = state.lastPlayer !== null && state.lastPlayer % 2 === player % 2;
       const move = findAIMove(state.hands[player], state.currentPlay?.combo || null, teammateLeading);
       if (move) commitPlay(player, move.cards, move.combo); else commitPass(player);
     }, 620 + Math.random() * 520);
+  }
+
+  function pauseAI() {
+    clearTimeout(state.timer);
+    state.timer = null;
+  }
+
+  function openPausedDialog(dialog) {
+    if (dialog.open) return;
+    pauseAI();
+    dialog.showModal();
+  }
+
+  function closePausedDialog(dialog) {
+    if (dialog.open) dialog.close();
+    scheduleAI();
   }
 
   function hint() {
@@ -514,7 +546,7 @@
   }
 
   function startGame(resetMatch = false) {
-    clearTimeout(state.timer);
+    pauseAI();
     cancelResultDialog();
     clearToast();
     if (resetMatch) {
@@ -553,7 +585,7 @@
 
   function endGame() {
     state.locked = true;
-    clearTimeout(state.timer);
+    pauseAI();
     const winnerTeam = state.finishOrder[0] % 2;
     const ourWin = winnerTeam === 0;
     const teamRanks = state.finishOrder.filter(i => i % 2 === winnerTeam).map(i => state.finishOrder.indexOf(i) + 1);
@@ -659,6 +691,7 @@
       pass: [[220, .07, .018, "sine", 0]],
       hint: [[480, .06, .025, "triangle", 0], [720, .09, .018, "triangle", .045]],
       play: [[410, .065, .028, "triangle", 0], [620, .1, .022, "sine", .045]],
+      turn: [[523.25, .07, .022, "sine", .14], [659.25, .11, .018, "sine", .21]],
       bomb: [[105, .24, .045, "sawtooth", 0], [158, .2, .035, "square", .035]],
       error: [[170, .09, .028, "square", 0], [125, .12, .022, "sawtooth", .055]],
       toggle: [[520, .07, .025, "sine", 0], [780, .08, .018, "sine", .045]],
@@ -674,7 +707,7 @@
     const note = BGM_MELODY[step];
     const played = note ? playVoice(note, .85, .006, "triangle", bgmVoices) : false;
     const bass = step % 4 === 0 && playVoice(BGM_BASS[step / 4], 2.6, .003, "sine", bgmVoices);
-    return played || bass;
+    return (!note && step % 4 !== 0) || played || bass;
   }
 
   function startBGM() {
@@ -726,19 +759,21 @@
     el["play-button"].addEventListener("click", humanPlay);
     el["pass-button"].addEventListener("click", humanPass);
     el["hint-button"].addEventListener("click", hint);
-    el["new-game-button"].addEventListener("click", () => {
-      if (!el["restart-dialog"].open) el["restart-dialog"].showModal();
-    });
-    el["cancel-restart"].addEventListener("click", () => el["restart-dialog"].close());
+    el["new-game-button"].addEventListener("click", () => openPausedDialog(el["restart-dialog"]));
+    el["cancel-restart"].addEventListener("click", () => closePausedDialog(el["restart-dialog"]));
     el["confirm-restart"].addEventListener("click", () => startGame(false));
     el["again-button"].addEventListener("click", () => startGame(el["again-button"].dataset.resetMatch === "true"));
-    el["help-button"].addEventListener("click", () => el["rules-dialog"].showModal());
-    el["close-rules"].addEventListener("click", () => el["rules-dialog"].close());
-    el["confirm-rules"].addEventListener("click", () => el["rules-dialog"].close());
+    el["help-button"].addEventListener("click", () => openPausedDialog(el["rules-dialog"]));
+    el["close-rules"].addEventListener("click", () => closePausedDialog(el["rules-dialog"]));
+    el["confirm-rules"].addEventListener("click", () => closePausedDialog(el["rules-dialog"]));
+    el["rules-dialog"].addEventListener("cancel", event => {
+      event.preventDefault();
+      closePausedDialog(el["rules-dialog"]);
+    });
     el["result-dialog"].addEventListener("cancel", event => event.preventDefault());
     el["restart-dialog"].addEventListener("cancel", event => {
       event.preventDefault();
-      el["restart-dialog"].close();
+      closePausedDialog(el["restart-dialog"]);
     });
     el["sound-button"].addEventListener("click", () => {
       state.sound = !state.sound;
@@ -762,7 +797,13 @@
       showToast(message);
     });
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) stopBGM(); else startBGM();
+      if (document.hidden) {
+        pauseAI();
+        stopBGM();
+      } else {
+        startBGM();
+        scheduleAI();
+      }
     });
     document.addEventListener("keydown", event => {
       const action = shortcutAction(event);

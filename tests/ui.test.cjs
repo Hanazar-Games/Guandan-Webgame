@@ -5,7 +5,7 @@ const vm = require("node:vm");
 const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
 const css = fs.readFileSync(require.resolve("../styles.css"), "utf8");
 let source = fs.readFileSync(require.resolve("../script.js"), "utf8");
-source = source.replace("  initElements();", "  globalThis.__guandanState = state;\n  globalThis.__guandanTest = { endGame };\n  initElements();");
+source = source.replace("  initElements();", "  globalThis.__guandanState = state;\n  globalThis.__guandanTest = { endGame, updateSelectionTip };\n  initElements();");
 
 class FakeClassList {
   constructor() { this.values = new Set(); }
@@ -51,6 +51,7 @@ elements.get("player-hand").querySelector = selector => selector === ".selected"
   ? { scrollIntoView: () => { selectionReveals++; } }
   : null;
 const documentListeners = new Map();
+const clearedTimers = [];
 const document = {
   hidden: false,
   getElementById(id) {
@@ -72,7 +73,7 @@ const context = {
   console, Math, Set, Map, document,
   window: {},
   setTimeout: () => 1,
-  clearTimeout() {},
+  clearTimeout(timer) { clearedTimers.push(timer); },
   setInterval: () => 1,
   clearInterval() {}
 };
@@ -110,6 +111,31 @@ assert.doesNotThrow(() => elements.get("new-game-button").listeners.get("click")
 elements.get("cancel-restart").listeners.get("click")[0]();
 assert.equal(restartDialog.open, false, "取消重开应关闭确认弹窗");
 
+context.__guandanState.currentPlayer = 1;
+context.__guandanState.timer = 77;
+context.__guandanTest.updateSelectionTip();
+assert.match(elements.get("selection-tip").textContent, /等待周舟出牌/, "非玩家回合不应继续提示选择手牌");
+elements.get("new-game-button").listeners.get("click")[0]();
+assert.equal(clearedTimers.includes(77), true, "打开重开确认框时应暂停 AI 计时器");
+elements.get("cancel-restart").listeners.get("click")[0]();
+assert.notEqual(context.__guandanState.timer, 77, "取消重开后应重新调度当前 AI 回合");
+
+context.__guandanState.timer = 88;
+elements.get("help-button").listeners.get("click")[0]();
+assert.equal(clearedTimers.includes(88), true, "查看规则时应暂停 AI 回合");
+assert.doesNotThrow(() => elements.get("help-button").listeners.get("click")[0](), "重复触发规则按钮不应再次打开弹窗");
+elements.get("close-rules").listeners.get("click")[0]();
+assert.notEqual(context.__guandanState.timer, 88, "关闭规则后应恢复 AI 回合");
+
+context.__guandanState.timer = 99;
+document.hidden = true;
+documentListeners.get("visibilitychange")[0]();
+assert.equal(clearedTimers.includes(99), true, "页面进入后台时应暂停 AI 回合");
+document.hidden = false;
+documentListeners.get("visibilitychange")[0]();
+assert.notEqual(context.__guandanState.timer, 99, "页面回到前台后应恢复 AI 回合");
+context.__guandanState.currentPlayer = 0;
+
 context.__guandanState.history.push({ action: "test" });
 elements.get("sound-button").listeners.get("click")[0]();
 elements.get("new-game-button").listeners.get("click")[0]();
@@ -127,6 +153,8 @@ context.__guandanState.selected.clear();
 context.__guandanTest.endGame();
 assert.equal(elements.get("play-button").classList.contains("power"), false, "本局结束后出牌按钮不得残留炸弹状态");
 assert.equal(elements.get("selection-tip").classList.contains("power"), false, "本局结束后选牌提示不得残留炸弹状态");
+assert.equal(elements.get("new-game-button").disabled, true, "等待结果弹窗时不得再打开重开确认框");
+assert.equal(elements.get("help-button").disabled, true, "等待结果弹窗时不得叠加规则弹窗");
 
 restartDialog.showModal();
 let restartPrevented = false;
@@ -156,6 +184,7 @@ assert.match(html, /id="new-game-button"[^>]*aria-label="重开本局"[^>]*title
 assert.match(html, /id="help-button"[^>]*title="查看规则"/, "帮助按钮提示文本应与可访问名称一致");
 assert.match(css, /\.control-icon\s*\{[^}]*fill:\s*none;[^}]*stroke:\s*currentColor;/s, "控件应使用统一描边图标样式");
 assert.match(css, /\.icon-button\[aria-pressed="true"\]\s*\{[^}]*color:\s*var\(--gold-bright\);/s, "已开启的音频控制应有明确视觉状态");
+assert.match(css, /\.icon-button:disabled,\s*\.new-game-button:disabled\s*\{[^}]*cursor:\s*not-allowed;/s, "结算期间禁用的顶部控件应有明确反馈");
 assert.match(css, /\.game-button span\s*\{[^}]*white-space:\s*nowrap;/s, "操作按钮文字不得因图标挤压而换行");
 assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.action-area\s*\{[^}]*width:\s*224px;/s, "窄屏操作区应为图标与文字预留足够宽度");
 assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*135px;[^}]*transform:\s*translateX\(-50%\);/s, "极窄屏中央状态应避开顶部牌背");
@@ -163,11 +192,13 @@ assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*?\.match-score\s*\{[^}]*d
 assert.match(css, /\.new-game-button\s*\{[^}]*white-space:\s*nowrap;[^}]*flex-shrink:\s*0;/s, "平板工具栏不得压缩重开按钮文字");
 assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*?\.game-button\s*\{[^}]*height:\s*44px;/s, "主要操作在移动视口也应满足 44px 触摸目标");
 assert.doesNotMatch(css, /\.game-button\s*\{[^}]*height:\s*42px;/s, "任何视口都不得把主要操作缩小到 44px 以下");
+assert.match(css, /\.card:hover:not\(:disabled\)\s*\{/, "非玩家回合的禁用手牌不应保留悬停抬升反馈");
 assert.match(css, /@media \(max-height:\s*740px\) and \(min-width:761px\)[\s\S]*?\.table-wrap\s*\{[^}]*min-height:\s*506px;/s, "短屏模式必须覆盖牌桌全局最小高度");
 assert.match(css, /@media \(max-height:\s*650px\) and \(max-width:760px\)[\s\S]*?\.table-wrap\s*\{[^}]*min-height:\s*484px;/s, "小屏竖屏牌桌应完整收进常见 568px 视口");
 assert.match(css, /@media \(max-height:\s*500px\) and \(min-width:761px\)[\s\S]*?\.table-wrap\s*\{[^}]*min-height:\s*310px;/s, "小屏横屏牌桌应完整收进 390px 视口");
 assert.match(css, /@media \(max-height:\s*500px\) and \(min-width:761px\)[\s\S]*?\.opponent-left,\s*\.opponent-right\s*\{[^}]*display:\s*none;/s, "小屏横屏应隐藏侧边牌背以免挤占操作区");
 assert.match(css, /\.card\.level-card::after\s*\{[^}]*content:\s*"级";/s, "级牌应有清晰的大牌徽标");
+assert.match(css, /\.card\.level-card::after\s*\{[^}]*left:\s*5px;[^}]*right:\s*auto;/s, "级牌徽标应放在不会被后牌遮挡的左下角");
 assert.match(css, /\.selection-tip\.power\s*\{[^}]*color:\s*var\(--gold-bright\);/s, "炸弹等大牌组合应使用强化反馈");
 assert.match(css, /@media \(max-height:\s*740px\) and \(min-width:761px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*23%;[^}]*transform:\s*translateX\(-50%\);/s, "短屏中央状态不得受内容高度影响并遮挡顶部牌背");
 

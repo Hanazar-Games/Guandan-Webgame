@@ -72,6 +72,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .icon-button.off::after { content:""; position:absolute; width:24px; height:2px; left:9px; top:20px; border:1px solid rgba(2,17,15,.85); border-radius:2px; background:currentColor; transform:rotate(-42deg); }
 .icon-button[aria-pressed="true"] { color:var(--gold-bright); background:rgba(216,182,106,.1); border-color:rgba(216,182,106,.38); }
 .new-game-button { gap:8px; padding:0 15px; margin-left:5px; color:var(--gold-bright); white-space:nowrap; flex-shrink:0; }
+.icon-button:disabled, .new-game-button:disabled { opacity:.35; cursor:not-allowed; }
 
 .table-wrap {
   position: relative; min-height: 630px; overflow: hidden;
@@ -168,8 +169,10 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 }
 .card:first-child { margin-left:0; }
 .card.selected { transform:translateY(-20px); box-shadow:-2px 8px 14px rgba(0,0,0,.34), 0 0 0 2px var(--gold-bright); }
+.card:disabled { cursor:default; filter:saturate(.72) brightness(.94); }
 .card.red { color:#b52927; }
-.card.level-card::after { content:"级"; position:absolute; right:5px; bottom:5px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; color:#35250f; background:linear-gradient(145deg,#f3d98f,#bf9450); font-size:9px; font-weight:800; box-shadow:0 1px 4px rgba(0,0,0,.22); }
+.card.level-card { border-color:#c79a45; background:linear-gradient(135deg,#fffdf6,#f4ead4); }
+.card.level-card::after { content:"级"; position:absolute; left:5px; right:auto; bottom:5px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; color:#35250f; background:linear-gradient(145deg,#f3d98f,#bf9450); font-size:9px; font-weight:800; box-shadow:0 1px 4px rgba(0,0,0,.22); }
 .card.wild::after { content:"配"; color:#fff8db; background:#bd3330; }
 .card-corner { position:absolute; top:5px; left:6px; display:flex; flex-direction:column; align-items:center; line-height:.9; font-family:Georgia,serif; font-weight:700; font-size:clamp(14px,1.45vw,20px); }
 .card-suit { margin-top:4px; font-size:.75em; }
@@ -216,8 +219,8 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .icon-button:hover, .new-game-button:hover { background:rgba(255,255,255,.12); border-color:rgba(216,182,106,.5); }
   .game-button.secondary:hover:not(:disabled) { border-color:rgba(241,213,142,.7); background:rgba(15,65,55,.88); }
   .game-button.primary:hover:not(:disabled) { transform:translateY(-1px); filter:brightness(1.06); }
-  .card:hover { transform:translateY(-8px); filter:brightness(1.04); }
-  .card.selected:hover { transform:translateY(-22px); }
+  .card:hover:not(:disabled) { transform:translateY(-8px); filter:brightness(1.04); }
+  .card.selected:hover:not(:disabled) { transform:translateY(-22px); }
 }
 
 @media (max-width: 760px) {

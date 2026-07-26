@@ -166,9 +166,19 @@ const protectedBombResponse = findAIMove([...responseBomb, card("K")], pair8);
 assert.equal(protectedBombResponse.combo.type, "bomb", "无法用普通牌压制时 AI 应整组出炸弹而非拆成对子");
 assert.equal(protectedBombResponse.cards.length, 4);
 
+const fiveThrees = [card("3"), card("3", "♥"), card("3", "♣"), card("3", "♦"), card("3", "♠", 1)];
+const surplusStraight = findAIMove([...fiveThrees, card("4"), card("5"), card("6"), card("7")], null);
+assert.equal(surplusStraight.combo.type, "straight", "AI 应允许使用炸弹余牌组成顺子并保留四张炸弹");
+const minimalBomb = findAIMove([...fiveThrees, card("K")], pair8);
+assert.equal(minimalBomb.combo.type, "bomb");
+assert.equal(minimalBomb.cards.length, 4, "四张炸弹足够压制时 AI 不应浪费第五张同点数牌");
+
 const markupCard = card("3");
 assert.match(cardMarkup(markupCard, true), /^<button/);
 assert.match(cardMarkup(markupCard, true), /aria-pressed="false"/, "手牌应暴露未选中状态");
+state.currentPlayer = 1;
+assert.match(cardMarkup(markupCard, true), / disabled/, "非玩家回合的手牌应停止接收交互焦点");
+state.currentPlayer = 0;
 state.selected.add(markupCard.id);
 assert.match(cardMarkup(markupCard, true), /aria-pressed="true"/, "手牌应暴露已选中状态");
 state.selected.clear();
@@ -192,14 +202,23 @@ assert.equal(oscillatorStarts - basicToneStarts >= 2, true, "出牌音效应使�
 const playStarts = oscillatorStarts;
 playSfx("bomb");
 assert.equal(oscillatorStarts - playStarts >= 2, true, "炸弹应有独立的分层音效");
+const turnStarts = oscillatorStarts;
+playSfx("turn");
+assert.equal(oscillatorStarts - turnStarts >= 2, true, "轮到玩家时应提供独立的提示音效");
 state.music = true;
 startBGM();
 startBGM();
 assert.equal(intervals.length, 1, "背景音乐只能启动一个调度器");
+intervals[0]();
+intervals[0]();
 const scheduledStops = oscillatorStops;
 stopBGM();
 assert.deepEqual(clearedIntervals, [1]);
 assert.equal(oscillatorStops > scheduledStops, true, "关闭背景音乐应立即停止仍在播放的音符");
+assert.equal(startBGM(), true, "背景音乐停在休止拍时也应能从后台恢复");
+assert.equal(intervals.length, 2, "背景音乐恢复后应重新建立调度器");
+stopBGM();
+assert.deepEqual(clearedIntervals, [1, 2]);
 state.music = false;
 
 const shortcutEvent = (key, interactive = false) => ({
