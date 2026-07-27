@@ -4,15 +4,15 @@
   const $ = id => document.getElementById(id);
   const en = {
     officialHome: "Official site", heroKicker: "FOUR PLAYERS · TWO TEAMS", heroTitle: "Master the table, <em>play your way.</em>", heroDescription: "Complete solo practice and LAN rooms. Read the hand, support your partner, and control every trick.",
-    singlePlayer: "Solo practice", singleDescription: "Play with three local AIs", lanGame: "LAN game", lanDescription: "Join the same network with a room code", tutorial: "Beginner tutorial", settings: "Game settings", announcement: "Latest news", announcementTitle: "Deep customization upgrade", announcementCopy: "16 live settings, wide parameter ranges, in-game access and finer audiovisual control.", ready: "Ready",
-    teammate: "Partner", ourTeam: "Our team", pass: "Pass", hint: "Hint", play: "Play", soundSettings: "Sound", sfx: "Game SFX", sfxCopy: "Cards, hints and results", sfxVolume: "SFX volume", sfxPitch: "SFX pitch", bgm: "Background music", bgmCopy: "Low-volume procedural soundtrack", bgmVolume: "Music volume", bgmTempo: "Music speed", displaySettings: "Display & language", language: "Interface language", motion: "Motion", motionFull: "Full animation", motionReduced: "Reduced motion", motionSpeed: "Animation speed", cardScale: "Card size", tableBrightness: "Table brightness", announcements: "Home announcement", announcementsCopy: "Show release news on the home screen", gameplaySettings: "Game & interaction", aiDelay: "AI thinking time", autoScroll: "Auto-focus hints", autoScrollCopy: "Scroll suggested cards into view", confirmRestart: "Confirm restart", confirmRestartCopy: "Prevent accidental progress loss", haptics: "Haptic feedback", hapticsCopy: "Vibrate for bombs and wins on supported devices", resetSettings: "Restore defaults", settingsRuntime: "Settings apply to this run only", about: "About",
+    singlePlayer: "Solo practice", singleDescription: "Play with three local AIs", lanGame: "LAN game", lanDescription: "Join the same network with a room code", tutorial: "Beginner tutorial", settings: "Game settings", announcement: "Latest news", announcementTitle: "Personalized table upgrade", announcementCopy: "24 live settings with wider audiovisual and interaction controls.", ready: "Ready",
+    teammate: "Partner", ourTeam: "Our team", pass: "Pass", hint: "Hint", play: "Play", soundSettings: "Sound", sfx: "Game SFX", sfxCopy: "Cards, hints and results", sfxVolume: "SFX volume", sfxPitch: "SFX pitch", sfxProfile: "SFX tone", profileSoft: "Soft", profileClassic: "Classic", profileCrisp: "Crisp", bgm: "Background music", bgmCopy: "Low-volume procedural soundtrack", bgmVolume: "Music volume", bgmTempo: "Music speed", bgmTexture: "Music layers", textureMinimal: "Minimal", textureBalanced: "Balanced", textureRich: "Rich", displaySettings: "Display & language", language: "Interface language", motion: "Motion", motionFull: "Full animation", motionReduced: "Reduced motion", motionSpeed: "Animation speed", cardScale: "Card size", tableBrightness: "Table brightness", contrast: "Interface contrast", saturation: "Table saturation", announcements: "Home announcement", announcementsCopy: "Show release news on the home screen", gameplaySettings: "Game & interaction", handSpacing: "Hand overlap", selectionLift: "Selection lift", aiDelay: "AI thinking time", toastDuration: "Message duration", autoScroll: "Auto-focus hints", autoScrollCopy: "Scroll suggested cards into view", confirmRestart: "Confirm restart", confirmRestartCopy: "Prevent accidental progress loss", haptics: "Haptic feedback", hapticsCopy: "Vibrate for bombs and wins on supported devices", hapticStrength: "Haptic strength", resetSettings: "Restore defaults", settingsRuntime: "Settings apply to this run only", about: "About",
     tutorialKicker: "FIVE STEPS", tutorial1Title: "Know your team", tutorial1Copy: "The player opposite you is your partner. Teamwork matters more than winning every trick.", tutorial2Title: "Use the wild heart", tutorial2Copy: "The heart level card can replace any card except jokers and unlock stronger combinations.", tutorial3Title: "Match before you beat", tutorial3Copy: "Normal hands need the same type and size with a higher value. Bombs break that rule.", tutorial4Title: "Play a turn", tutorial4Copy: "Select cards, ask for a hint when unsure, or pass when no response is available.", tutorial5Title: "Level up together", tutorial5Copy: "The first finisher and partner rank decide the level gain. Win while playing A to finish the match.", previous: "Previous", next: "Next", finish: "Start playing",
     playerName: "Player name", createRoom: "Create room", or: "or", roomCode: "Room code", joinRoom: "Join room", copy: "Copy", startGame: "Start game", waitingPlayers: "Waiting for players…", host: "Host", player: "Player", lanNeedServer: "Start with npm start, then open the LAN address.", roomReady: "Players may join now. Empty seats will use AI.", copied: "Room code copied", connectionLost: "The host closed the room or the connection was lost."
   };
   const zh = {
     officialHome: "返回官网", heroKicker: "四人结盟 · 牌局争锋", heroTitle: "一桌掼蛋，<em>胜负由你。</em>", heroDescription: "完整单机练习与局域网房间。识别牌型、配合对家，在每一次出牌中掌控节奏。",
-    singlePlayer: "单机练习", singleDescription: "与三位本地 AI 对局", lanGame: "局域网联机", lanDescription: "同一网络，房间码加入", tutorial: "新手教程", settings: "游戏设置", announcement: "最新公告", announcementTitle: "深度自定义与体验升级", announcementCopy: "新增 16 项即时设置、宽范围参数、牌局内设置入口与更细致的音画交互控制。", ready: "准备就绪",
-    teammate: "队友", ourTeam: "我方", pass: "不出", hint: "提示", play: "出牌", soundSettings: "声音设置", sfx: "游戏音效", sfxCopy: "出牌、提示与胜负反馈", sfxVolume: "音效音量", sfxPitch: "音效音高", bgm: "背景音乐", bgmCopy: "低音量程序化牌桌音乐", bgmVolume: "音乐音量", bgmTempo: "音乐速度", displaySettings: "显示与语言", language: "界面语言", motion: "动画效果", motionFull: "完整动画", motionReduced: "减少动画", motionSpeed: "动画速度", cardScale: "牌面尺寸", tableBrightness: "牌桌亮度", announcements: "首页公告", announcementsCopy: "在主页面显示版本动态", gameplaySettings: "对局与交互", aiDelay: "AI 思考时间", autoScroll: "提示自动定位", autoScrollCopy: "将提示选牌滚动到可视区域", confirmRestart: "重开二次确认", confirmRestartCopy: "避免误触导致当前进度丢失", haptics: "震动反馈", hapticsCopy: "支持设备在炸弹与获胜时震动", resetSettings: "恢复默认设置", settingsRuntime: "设置仅在当前运行期间生效", about: "关于",
+    singlePlayer: "单机练习", singleDescription: "与三位本地 AI 对局", lanGame: "局域网联机", lanDescription: "同一网络，房间码加入", tutorial: "新手教程", settings: "游戏设置", announcement: "最新公告", announcementTitle: "个性牌桌与体验升级", announcementCopy: "新增 24 项即时设置，提供更宽泛的音画与交互自定义范围。", ready: "准备就绪",
+    teammate: "队友", ourTeam: "我方", pass: "不出", hint: "提示", play: "出牌", soundSettings: "声音设置", sfx: "游戏音效", sfxCopy: "出牌、提示与胜负反馈", sfxVolume: "音效音量", sfxPitch: "音效音高", sfxProfile: "音效音色", profileSoft: "柔和", profileClassic: "经典", profileCrisp: "清脆", bgm: "背景音乐", bgmCopy: "低音量程序化牌桌音乐", bgmVolume: "音乐音量", bgmTempo: "音乐速度", bgmTexture: "音乐层次", textureMinimal: "轻简", textureBalanced: "均衡", textureRich: "丰富", displaySettings: "显示与语言", language: "界面语言", motion: "动画效果", motionFull: "完整动画", motionReduced: "减少动画", motionSpeed: "动画速度", cardScale: "牌面尺寸", tableBrightness: "牌桌亮度", contrast: "界面对比度", saturation: "牌桌饱和度", announcements: "首页公告", announcementsCopy: "在主页面显示版本动态", gameplaySettings: "对局与交互", handSpacing: "手牌重叠", selectionLift: "选牌抬升", aiDelay: "AI 思考时间", toastDuration: "提示停留时间", autoScroll: "提示自动定位", autoScrollCopy: "将提示选牌滚动到可视区域", confirmRestart: "重开二次确认", confirmRestartCopy: "避免误触导致当前进度丢失", haptics: "震动反馈", hapticsCopy: "支持设备在炸弹与获胜时震动", hapticStrength: "震动强度", resetSettings: "恢复默认设置", settingsRuntime: "设置仅在当前运行期间生效", about: "关于",
     tutorialKicker: "五步入门", tutorial1Title: "认清你的队伍", tutorial1Copy: "你与对面玩家是一队。配合队友，比单纯压过每一手牌更重要。", tutorial2Title: "认识逢人配", tutorial2Copy: "红桃级牌可以替代除大小王以外的任意牌，是组合强牌的关键。", tutorial3Title: "同型才能压制", tutorial3Copy: "普通牌需要牌型、张数一致且点数更大；炸弹可以打破这一限制。", tutorial4Title: "完成一次出牌", tutorial4Copy: "点击手牌进行选择。拿不准时使用提示，没有合适的牌就选择不出。", tutorial5Title: "与队友一起升级", tutorial5Copy: "头游与队友名次决定升级幅度。率先打过 A 即可完成比赛。", previous: "上一步", next: "下一步", finish: "开始游戏",
     playerName: "玩家名称", createRoom: "创建房间", or: "或", roomCode: "房间码", joinRoom: "加入房间", copy: "复制", startGame: "开始游戏", waitingPlayers: "等待玩家加入…", host: "房主", player: "玩家", lanNeedServer: "请使用 npm start 启动项目，再通过局域网地址访问。", roomReady: "可以邀请玩家加入，空座将由 AI 补齐。", copied: "房间码已复制", connectionLost: "房主已关闭房间或网络连接已中断。"
   };
@@ -35,9 +35,11 @@
   let room = null;
   const DEFAULT_SETTINGS = Object.freeze({
     language: "zh-CN", motion: "full", announcements: true,
-    sound: true, sfxVolume: 100, sfxPitch: 100, music: false, bgmVolume: 70, bgmTempo: 100,
-    motionSpeed: 100, cardScale: 100, tableBrightness: 100,
-    aiDelay: 900, autoScroll: true, confirmRestart: true, haptics: false
+    sound: true, sfxVolume: 100, sfxPitch: 100, sfxProfile: "classic",
+    music: false, bgmVolume: 70, bgmTempo: 100, bgmTexture: "balanced",
+    motionSpeed: 100, cardScale: 100, tableBrightness: 100, contrast: 100, saturation: 100,
+    handSpacing: 61, selectionLift: 100, aiDelay: 900, toastDuration: 1800,
+    autoScroll: true, confirmRestart: true, haptics: false, hapticStrength: 100
   });
   let settings = { ...DEFAULT_SETTINGS };
 
@@ -56,13 +58,24 @@
 
   const open = dialog => { if (!dialog.open) dialog.showModal(); };
   const close = dialog => { if (dialog.open) dialog.close(); };
+  const selectSettingsTab = name => {
+    document.querySelectorAll("[data-settings-tab]").forEach(tab => {
+      const selected = (tab.dataset.settingsTab || tab.id.replace("settings-tab-", "")) === name;
+      tab.classList.toggle("active", selected);
+      tab.setAttribute("aria-selected", String(selected));
+    });
+    document.querySelectorAll("[data-settings-panel]").forEach(panel => panel.classList.toggle("active", (panel.dataset.settingsPanel || panel.id.replace("settings-panel-", "")) === name));
+  };
   const rangeSettings = {
     "setting-sfx-volume": "sfxVolume", "setting-sfx-pitch": "sfxPitch",
     "setting-bgm-volume": "bgmVolume", "setting-bgm-tempo": "bgmTempo",
     "setting-motion-speed": "motionSpeed", "setting-card-scale": "cardScale",
-    "setting-table-brightness": "tableBrightness", "setting-ai-delay": "aiDelay"
+    "setting-table-brightness": "tableBrightness", "setting-contrast": "contrast",
+    "setting-saturation": "saturation", "setting-hand-spacing": "handSpacing",
+    "setting-selection-lift": "selectionLift", "setting-ai-delay": "aiDelay",
+    "setting-toast-duration": "toastDuration", "setting-haptic-strength": "hapticStrength"
   };
-  const rangeText = (key, value) => key === "aiDelay" ? `${value}ms` : `${value}%`;
+  const rangeText = (key, value) => ["aiDelay", "toastDuration"].includes(key) ? `${value}ms` : `${value}%`;
   const syncSettingsControls = () => {
     for (const [id, key] of Object.entries(rangeSettings)) {
       $(id).value = settings[key];
@@ -72,12 +85,20 @@
     }
     $("language-select").value = settings.language;
     $("motion-select").value = settings.motion;
+    $("setting-sfx-profile").value = settings.sfxProfile;
+    $("setting-bgm-texture").value = settings.bgmTexture;
     [["setting-sfx", "sound"], ["setting-bgm", "music"], ["setting-announcements", "announcements"], ["setting-auto-scroll", "autoScroll"], ["setting-confirm-restart", "confirmRestart"], ["setting-haptics", "haptics"]]
       .forEach(([id, key]) => { $(id).checked = settings[key]; });
   };
   const applyRuntimeSettings = () => {
     document.body.classList.toggle("reduced-motion", settings.motion === "reduced");
     document.documentElement.style.setProperty("--card-size-adjust", `${(settings.cardScale - 100) * .3}px`);
+    document.documentElement.style.setProperty("--hand-spacing", String(settings.handSpacing / 100).replace(/^0/, ""));
+    document.documentElement.style.setProperty("--hand-overlap", `${(settings.handSpacing - 100) * .62}px`);
+    document.documentElement.style.setProperty("--selection-lift", settings.selectionLift / 100);
+    document.documentElement.style.setProperty("--selection-lift-offset", `${settings.selectionLift * -.2}px`);
+    document.body.style.setProperty("--ui-contrast", settings.contrast / 100);
+    document.body.style.setProperty("--table-saturation", String(settings.saturation / 100).replace(/^0/, ""));
     const tintStrength = (Math.abs(settings.tableBrightness - 100) / 250).toFixed(2);
     const tintColor = settings.tableBrightness < 100 ? "0,8,7" : "235,255,247";
     document.body.style.setProperty("--table-tint", `rgba(${tintColor},${tintStrength})`);
@@ -85,8 +106,8 @@
     [["--motion-hero", .7], ["--motion-deal", .36], ["--motion-play", .22], ["--motion-float-card", 5], ["--motion-float-one", 7], ["--motion-float-two", 8], ["--motion-float-three", 9], ["--motion-aurora", 24], ["--motion-transition", .25]]
       .forEach(([property, seconds]) => document.body.style.setProperty(property, `${seconds * speed}s`));
     document.querySelector(".announcement-card").classList.toggle("view-hidden", !settings.announcements);
-    window.GuandanGame?.setAudio({ sound: settings.sound, music: settings.music, sfxVolume: settings.sfxVolume / 100, bgmVolume: settings.bgmVolume / 100, sfxPitch: settings.sfxPitch / 100, bgmTempo: settings.bgmTempo / 100 });
-    window.GuandanGame?.setPreferences({ aiDelay: settings.aiDelay, autoScrollHints: settings.autoScroll, confirmRestart: settings.confirmRestart, haptics: settings.haptics });
+    window.GuandanGame?.setAudio({ sound: settings.sound, music: settings.music, sfxVolume: settings.sfxVolume / 100, bgmVolume: settings.bgmVolume / 100, sfxPitch: settings.sfxPitch / 100, bgmTempo: settings.bgmTempo / 100, sfxProfile: settings.sfxProfile, bgmTexture: settings.bgmTexture });
+    window.GuandanGame?.setPreferences({ aiDelay: settings.aiDelay, autoScrollHints: settings.autoScroll, confirmRestart: settings.confirmRestart, haptics: settings.haptics, hapticStrength: settings.hapticStrength / 100, toastDuration: settings.toastDuration });
   };
   const openSettings = () => { window.GuandanGame?.pause(); syncSettingsControls(); open($("settings-dialog")); };
   const closeSettings = () => {
@@ -240,7 +261,10 @@
   });
 
   $("language-select").addEventListener("change", event => { settings.language = language = event.target.value; translate(); });
+  document.querySelectorAll("[data-settings-tab]").forEach(tab => tab.addEventListener("click", () => selectSettingsTab(tab.dataset.settingsTab || tab.id.replace("settings-tab-", ""))));
   $("motion-select").addEventListener("change", event => { settings.motion = event.target.value; applyRuntimeSettings(); });
+  [["setting-sfx-profile", "sfxProfile"], ["setting-bgm-texture", "bgmTexture"]]
+    .forEach(([id, key]) => $(id).addEventListener("change", event => { settings[key] = event.target.value; applyRuntimeSettings(); }));
   [["setting-sfx", "sound"], ["setting-bgm", "music"], ["setting-announcements", "announcements"], ["setting-auto-scroll", "autoScroll"], ["setting-confirm-restart", "confirmRestart"], ["setting-haptics", "haptics"]]
     .forEach(([id, key]) => $(id).addEventListener("change", event => { settings[key] = event.target.checked; applyRuntimeSettings(); }));
   for (const [id, key] of Object.entries(rangeSettings)) $(id).addEventListener("input", event => {

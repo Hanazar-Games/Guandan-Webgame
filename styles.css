@@ -9,6 +9,12 @@
   --panel: rgba(2, 23, 21, 0.72);
   --card-size-adjust: 0px;
   --table-tint: rgba(255,255,255,0);
+  --ui-contrast: 1;
+  --table-saturation: 1;
+  --hand-spacing: .61;
+  --hand-overlap: -24px;
+  --selection-lift: 1;
+  --selection-lift-offset: -20px;
   --motion-hero: .7s;
   --motion-deal: .36s;
   --motion-play: .22s;
@@ -37,6 +43,7 @@ body {
 }
 
 .view-hidden { display:none !important; }
+.home-screen,.game-shell { filter:contrast(var(--ui-contrast)); }
 
 .home-screen { position:relative; min-height:100vh; min-height:100dvh; overflow:hidden; display:grid; grid-template-rows:82px 1fr 38px; background:radial-gradient(circle at 68% 42%,rgba(22,108,87,.32),transparent 30%),radial-gradient(circle at 20% 0,rgba(147,101,39,.14),transparent 28%),linear-gradient(145deg,#071b17,#020b09 68%); isolation:isolate; }
 .home-screen::before { content:""; position:absolute; inset:82px 5vw 38px; z-index:-2; border:1px solid rgba(216,182,106,.16); border-radius:46% 54% 48% 52%; transform:rotate(-3deg); }
@@ -133,10 +140,12 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 
 .table-wrap {
   position: relative; min-height: 630px; overflow: hidden;
-  background:
-    linear-gradient(var(--table-tint),var(--table-tint)),
-    radial-gradient(ellipse at center, rgba(34, 111, 89, .72) 0%, rgba(10, 70, 58, .9) 48%, rgba(3, 39, 34, .98) 100%);
   isolation: isolate;
+}
+.table-wrap::after {
+  content:""; position:absolute; inset:0; z-index:-2;
+  background:linear-gradient(var(--table-tint),var(--table-tint)),radial-gradient(ellipse at center,rgba(34,111,89,.72) 0%,rgba(10,70,58,.9) 48%,rgba(3,39,34,.98) 100%);
+  filter:saturate(var(--table-saturation));
 }
 .table-wrap::before {
   content: ""; position: absolute; inset: 16px; z-index: -1;
@@ -222,13 +231,13 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .hand { min-width:max-content; height:106px; display:flex; align-items:flex-end; padding:14px 34px 0 16px; }
 .card.deal-card { animation:hand-deal var(--motion-deal) cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--card-index) * 16ms); }
 .card {
-  position:relative; flex:0 0 var(--card-w); width:var(--card-w); height:var(--card-h); margin-left:calc(var(--card-w) * -.39);
+  position:relative; flex:0 0 var(--card-w); width:var(--card-w); height:var(--card-h); margin-left:var(--hand-overlap);
   border:1px solid #d9d6ca; border-radius:clamp(5px,.55vw,8px); color:#171916; background:linear-gradient(135deg,#fff 0%,#f5f2e8 100%);
   box-shadow:-2px 5px 9px rgba(0,0,0,.28), inset 0 0 0 2px rgba(255,255,255,.7);
   cursor:pointer; user-select:none; touch-action:manipulation; transform:translateY(0); transition:transform .14s ease, filter .14s ease, box-shadow .14s ease;
 }
 .card:first-child { margin-left:0; }
-.card.selected { transform:translateY(-20px); box-shadow:-2px 8px 14px rgba(0,0,0,.34), 0 0 0 2px var(--gold-bright); }
+.card.selected { transform:translateY(var(--selection-lift-offset)); box-shadow:-2px 8px 14px rgba(0,0,0,.34), 0 0 0 2px var(--gold-bright); }
 .card:disabled { cursor:default; filter:saturate(.72) brightness(.94); }
 .card.red { color:#b52927; }
 .card.level-card { border-color:#c79a45; background:linear-gradient(135deg,#fffdf6,#f4ead4); }
@@ -273,10 +282,15 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .toast { position:fixed; z-index:20; left:50%; top:95px; width:max-content; max-width:calc(100vw - 24px); transform:translate(-50%,-15px); padding:9px 16px; color:#fff; background:rgba(116,28,25,.94); border:1px solid rgba(255,170,160,.35); border-radius:7px; font-size:12px; text-align:center; opacity:0; pointer-events:none; transition:.2s ease; }
 .toast.show { opacity:1; transform:translate(-50%,0); }
 
-.settings-modal { width:min(960px,calc(100vw - 30px)); }
+.settings-modal { width:min(1040px,calc(100vw - 30px)); }
 .settings-modal::backdrop { background:rgba(0,8,7,.55); backdrop-filter:blur(2px); }
-.settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:22px 26px 28px; }
-.settings-section { padding:17px; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:rgba(0,0,0,.12); }
+.settings-tabs { position:sticky; top:0; z-index:3; display:grid; grid-template-columns:repeat(4,1fr); gap:7px; padding:12px 26px; background:rgba(5,34,29,.96); border-bottom:1px solid rgba(255,255,255,.08); backdrop-filter:blur(12px); }
+.settings-tabs button { min-height:40px; padding:7px 10px; color:var(--muted); border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.035); cursor:pointer; font-size:11px; }
+.settings-tabs button.active { color:var(--gold-bright); border-color:rgba(216,182,106,.45); background:rgba(216,182,106,.12); }
+.settings-tabs button:focus-visible { outline:3px solid var(--gold-bright); outline-offset:2px; }
+.settings-grid { padding:18px 26px 24px; }
+.settings-section { display:none; padding:17px; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:rgba(0,0,0,.12); }
+.settings-section.active { display:block; animation:settings-panel-in var(--motion-transition) ease both; }
 .settings-section h3 { margin:0 0 14px; color:var(--gold-bright); font-size:12px; letter-spacing:2px; }
 .setting-toggle,.range-setting,.select-setting { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:50px; color:var(--ink); border-top:1px solid rgba(255,255,255,.07); font-size:11px; }
 .settings-section > label:first-of-type { border-top:0; }
@@ -293,8 +307,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .range-setting input { width:52%; min-width:130px; accent-color:var(--gold); cursor:pointer; }
 .range-value { width:max-content; padding:2px 6px; color:var(--gold-bright); border-radius:5px; background:rgba(216,182,106,.1); font:10px Georgia,serif; }
 .select-setting select,.lan-connect input { min-height:38px; padding:0 10px; color:var(--ink); border:1px solid rgba(255,255,255,.16); border-radius:7px; background:#092e28; }
-.about-section { grid-column:1 / -1; }
-.gameplay-section { grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; column-gap:26px; }
+.gameplay-section.active { display:grid; grid-template-columns:1fr 1fr; column-gap:26px; }
 .gameplay-section h3 { grid-column:1 / -1; }
 .about-section p { color:var(--muted); font-size:11px; }
 .about-links { display:flex; flex-wrap:wrap; gap:7px; }
@@ -346,6 +359,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 @keyframes float-one { 50% { transform:translate(14px,-16px) rotate(-12deg); } }
 @keyframes float-two { 50% { transform:translate(-10px,-18px) rotate(11deg); } }
 @keyframes hand-deal { from { opacity:0; transform:translateY(38px) rotate(4deg); } }
+@keyframes settings-panel-in { from { opacity:0; transform:translateY(7px); } }
 .status-dot.thinking { animation:pulse .8s infinite; }
 
 @media (hover:hover) and (pointer:fine) {
@@ -355,7 +369,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .game-button.secondary:hover:not(:disabled) { border-color:rgba(241,213,142,.7); background:rgba(15,65,55,.88); }
   .game-button.primary:hover:not(:disabled) { transform:translateY(-1px); filter:brightness(1.06); }
   .card:hover:not(:disabled) { transform:translateY(-8px); filter:brightness(1.04); }
-  .card.selected:hover:not(:disabled) { transform:translateY(-22px); }
+  .card.selected:hover:not(:disabled) { transform:translateY(calc(var(--selection-lift-offset) - 2px)); }
 }
 
 @media (max-width: 760px) {
@@ -365,9 +379,9 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .hero-copy h2 { font-size:clamp(38px,12vw,58px); }
   .announcement-card { max-width:none; }
   .floating-card { display:none; }
-  .settings-grid { grid-template-columns:1fr; padding:17px; }
-  .gameplay-section { grid-column:auto; display:block; }
-  .about-section { grid-column:auto; }
+  .settings-tabs { padding-inline:17px; }
+  .settings-grid { padding:14px 17px 17px; }
+  .gameplay-section.active { display:block; }
   :root { --card-w:calc(48px + var(--card-size-adjust)); }
   .game-shell { grid-template-rows:66px minmax(570px,1fr) 28px; grid-template-rows:66px minmax(570px,calc(100dvh - 94px)) 28px; }
   .topbar { grid-template-columns:1fr auto 1fr; padding:0 13px; padding-right:max(13px,env(safe-area-inset-right,0px)); padding-left:max(13px,env(safe-area-inset-left,0px)); }

@@ -84,19 +84,26 @@ assert.equal(context.__guandanState.hands.map(hand => hand.length).join(","), "2
 assert.match(html, /id="home-screen"[\s\S]*id="single-player-button"[\s\S]*id="lan-button"/, "主页面应提供单机与局域网入口");
 assert.match(html, /id="settings-dialog"[\s\S]*id="setting-sfx"[\s\S]*id="setting-bgm"[\s\S]*id="language-select"/, "设置中心应包含音效、音乐与语言设置");
 for (const [id, min, max] of [
-  ["setting-sfx-volume", "0", "100"], ["setting-sfx-pitch", "70", "140"],
-  ["setting-bgm-volume", "0", "100"], ["setting-bgm-tempo", "60", "160"],
-  ["setting-motion-speed", "50", "200"], ["setting-card-scale", "70", "140"],
-  ["setting-table-brightness", "60", "140"], ["setting-ai-delay", "200", "2200"]
+  ["setting-sfx-volume", "0", "100"], ["setting-sfx-pitch", "50", "180"],
+  ["setting-bgm-volume", "0", "100"], ["setting-bgm-tempo", "50", "200"],
+  ["setting-motion-speed", "25", "250"], ["setting-card-scale", "65", "150"],
+  ["setting-table-brightness", "40", "160"], ["setting-contrast", "70", "140"],
+  ["setting-saturation", "40", "160"], ["setting-hand-spacing", "45", "100"],
+  ["setting-selection-lift", "50", "180"], ["setting-ai-delay", "100", "3000"],
+  ["setting-toast-duration", "600", "5000"], ["setting-haptic-strength", "25", "200"]
 ]) {
   assert.match(html, new RegExp(`id="${id}"[^>]*min="${min}"[^>]*max="${max}"`), `${id} 应提供明确且宽泛的可调范围`);
 }
-for (const id of ["setting-auto-scroll", "setting-confirm-restart", "setting-haptics", "setting-announcements", "reset-settings"]) {
+for (const id of ["setting-sfx-profile", "setting-bgm-texture", "setting-auto-scroll", "setting-confirm-restart", "setting-haptics", "setting-announcements", "reset-settings"]) {
   assert.match(html, new RegExp(`id="${id}"`), `设置中心缺少 ${id}`);
 }
-assert.equal((html.match(/class="range-value"/g) || []).length, 8, "每个范围参数都应显示当前数值");
+assert.equal((html.match(/class="range-value"/g) || []).length, 14, "每个范围参数都应显示当前数值");
 const settingsMarkup = html.match(/<dialog id="settings-dialog"[\s\S]*?<\/dialog>/)[0];
-assert.equal((settingsMarkup.match(/type="range"/g) || []).length + (settingsMarkup.match(/type="checkbox"/g) || []).length + (settingsMarkup.match(/<select /g) || []).length, 16, "设置中心应提供 16 项可调参数");
+assert.equal((settingsMarkup.match(/type="range"/g) || []).length + (settingsMarkup.match(/type="checkbox"/g) || []).length + (settingsMarkup.match(/<select /g) || []).length, 24, "设置中心应提供 24 项可调参数");
+for (const name of ["sound", "display", "gameplay", "about"]) {
+  assert.match(settingsMarkup, new RegExp(`id="settings-tab-${name}"[^>]*data-settings-tab="${name}"`), `设置中心缺少 ${name} 分类标签`);
+  assert.match(settingsMarkup, new RegExp(`id="settings-panel-${name}"[^>]*data-settings-panel="${name}"`), `设置中心缺少 ${name} 分类面板`);
+}
 assert.equal((html.match(/<option value="(?:zh-CN|zh-TW|en|ja|ko|es|fr|de|pt|ru)"/g) || []).length, 10, "语言设置应提供 10 种语言");
 assert.equal((html.match(/class="tutorial-slide(?: active)?"/g) || []).length, 5, "新手教程应包含五个步骤");
 assert.match(html, /id="lan-dialog"[\s\S]*id="create-room"[\s\S]*id="join-room"[\s\S]*id="start-lan-game"/, "局域网大厅应具备建房、加入和开始入口");

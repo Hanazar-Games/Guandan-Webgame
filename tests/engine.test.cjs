@@ -5,7 +5,7 @@ const vm = require("node:vm");
 let source = fs.readFileSync(require.resolve("../script.js"), "utf8");
 source = source.replace(
   "  initElements();",
-  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM, setAudio, setPreferences, getTuning: () => ({ sfxPitch, bgmTempo, aiDelay, autoScrollHints, confirmRestart, haptics }) };\n  return;\n  initElements();"
+  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM, setAudio, setPreferences, getTuning: () => ({ sfxPitch, bgmTempo, sfxProfile, bgmTexture, aiDelay, autoScrollHints, confirmRestart, haptics, hapticStrength, toastDuration }) };\n  return;\n  initElements();"
 );
 
 const clearedTimers = [];
@@ -16,6 +16,7 @@ let audioContexts = 0;
 let oscillatorStops = 0;
 let oscillatorStarts = 0;
 const oscillatorFrequencies = [];
+const oscillatorTypes = [];
 const vibrations = [];
 const audioNode = () => ({ connect() {}, disconnect() {} });
 class FakeAudioContext {
@@ -30,7 +31,7 @@ class FakeAudioContext {
       ...audioNode(), frequency: { value: 0 }, type: "sine", start() { oscillatorStarts++; },
       stop() { oscillatorStops++; }, addEventListener() {}
     };
-    oscillator.start = () => { oscillatorStarts++; oscillatorFrequencies.push(oscillator.frequency.value); };
+    oscillator.start = () => { oscillatorStarts++; oscillatorFrequencies.push(oscillator.frequency.value); oscillatorTypes.push(oscillator.type); };
     return oscillator;
   }
   createGain() {
@@ -245,14 +246,17 @@ assert.equal(intervalDelays.at(-1), 1050 / .8);
 stopBGM();
 state.music = false;
 
-setPreferences({ aiDelay: 200, autoScrollHints: false, confirmRestart: false, haptics: true });
-assert.deepEqual(JSON.parse(JSON.stringify(getTuning())), { sfxPitch: 1.4, bgmTempo: .8, aiDelay: 200, autoScrollHints: false, confirmRestart: false, haptics: true });
+setAudio({ sfxProfile: "crisp", bgmTexture: "rich" });
+playSfx("select");
+assert.equal(oscillatorTypes.at(-1), "square", "清脆音色应实际改变 SFX 振荡器波形");
+setPreferences({ aiDelay: 100, autoScrollHints: false, confirmRestart: false, haptics: true, hapticStrength: 2, toastDuration: 5000 });
+assert.deepEqual(JSON.parse(JSON.stringify(getTuning())), { sfxPitch: 1.4, bgmTempo: .8, sfxProfile: "crisp", bgmTexture: "rich", aiDelay: 100, autoScrollHints: false, confirmRestart: false, haptics: true, hapticStrength: 2, toastDuration: 5000 });
 state.sound = false;
 playSfx("bomb");
-assert.deepEqual(vibrations, [45], "震动反馈应能在关闭 SFX 时独立工作");
+assert.deepEqual(vibrations, [90], "震动强度应能在关闭 SFX 时独立工作");
 state.sound = true;
 setPreferences({ aiDelay: 99999 });
-assert.equal(getTuning().aiDelay, 2200, "AI 思考时间应限制在设置范围内");
+assert.equal(getTuning().aiDelay, 3000, "AI 思考时间应限制在设置范围内");
 
 const shortcutEvent = (key, interactive = false, modifiers = {}) => ({
   key,

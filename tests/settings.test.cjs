@@ -46,6 +46,8 @@ class Element {
 
 const elements = new Map([...html.matchAll(/\sid="([^"]+)"/g)].map(match => [match[1], new Element(match[1])]));
 const outputs = new Map([...html.matchAll(/<output[^>]*for="([^"]+)"/g)].map(match => [match[1], new Element()]));
+const settingsTabs = ["sound", "display", "gameplay", "about"].map(name => elements.get(`settings-tab-${name}`));
+const settingsPanels = ["sound", "display", "gameplay", "about"].map(name => elements.get(`settings-panel-${name}`));
 const announcement = new Element("announcement");
 const heroTitle = new Element("hero-title");
 const documentElement = { lang: "zh-CN", style: new Style() };
@@ -61,7 +63,11 @@ const document = {
     if (match) return outputs.get(match[1]);
     return null;
   },
-  querySelectorAll() { return []; }
+  querySelectorAll(selector) {
+    if (selector === "[data-settings-tab]") return settingsTabs;
+    if (selector === "[data-settings-panel]") return settingsPanels;
+    return [];
+  }
 };
 
 const audioCalls = [];
@@ -88,6 +94,11 @@ vm.runInContext(source, context);
 const fire = (id, type) => elements.get(id).listeners.get(type)[0]({ target: elements.get(id), preventDefault() {} });
 assert.equal(outputs.get("setting-sfx-volume").textContent, "100%");
 assert.equal(outputs.get("setting-ai-delay").textContent, "900ms");
+assert.equal(outputs.get("setting-toast-duration").textContent, "1800ms");
+fire("settings-tab-display", "click");
+assert.equal(elements.get("settings-tab-display").attributes.get("aria-selected"), "true");
+assert.equal(elements.get("settings-panel-display").classList.contains("active"), true);
+assert.equal(elements.get("settings-panel-sound").classList.contains("active"), false);
 
 elements.get("setting-sfx-pitch").value = "140";
 fire("setting-sfx-pitch", "input");
@@ -106,6 +117,32 @@ elements.get("setting-ai-delay").value = "2200";
 fire("setting-ai-delay", "input");
 assert.equal(preferenceCalls.at(-1).aiDelay, 2200);
 
+elements.get("setting-contrast").value = "140";
+fire("setting-contrast", "input");
+assert.equal(body.style.getPropertyValue("--ui-contrast"), "1.4");
+elements.get("setting-saturation").value = "40";
+fire("setting-saturation", "input");
+assert.equal(body.style.getPropertyValue("--table-saturation"), ".4");
+elements.get("setting-hand-spacing").value = "45";
+fire("setting-hand-spacing", "input");
+assert.equal(documentElement.style.getPropertyValue("--hand-spacing"), ".45");
+elements.get("setting-selection-lift").value = "180";
+fire("setting-selection-lift", "input");
+assert.equal(documentElement.style.getPropertyValue("--selection-lift"), "1.8");
+elements.get("setting-toast-duration").value = "5000";
+fire("setting-toast-duration", "input");
+assert.equal(preferenceCalls.at(-1).toastDuration, 5000);
+elements.get("setting-haptic-strength").value = "200";
+fire("setting-haptic-strength", "input");
+assert.equal(preferenceCalls.at(-1).hapticStrength, 2);
+
+elements.get("setting-sfx-profile").value = "crisp";
+fire("setting-sfx-profile", "change");
+assert.equal(audioCalls.at(-1).sfxProfile, "crisp");
+elements.get("setting-bgm-texture").value = "rich";
+fire("setting-bgm-texture", "change");
+assert.equal(audioCalls.at(-1).bgmTexture, "rich");
+
 elements.get("setting-announcements").checked = false;
 fire("setting-announcements", "change");
 assert.equal(announcement.classList.contains("view-hidden"), true);
@@ -120,6 +157,8 @@ assert.equal(resumes, 1, "关闭牌局设置后应恢复 AI");
 fire("reset-settings", "click");
 assert.equal(elements.get("setting-card-scale").value, 100);
 assert.equal(elements.get("setting-ai-delay").value, 900);
+assert.equal(elements.get("setting-sfx-profile").value, "classic");
+assert.equal(elements.get("setting-bgm-texture").value, "balanced");
 assert.equal(announcement.classList.contains("view-hidden"), false);
 assert.equal(documentElement.style.getPropertyValue("--card-size-adjust"), "0px");
 

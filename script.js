@@ -41,10 +41,14 @@
   let bgmVolume = .7;
   let sfxPitch = 1;
   let bgmTempo = 1;
+  let sfxProfile = "classic";
+  let bgmTexture = "balanced";
   let aiDelay = 900;
   let autoScrollHints = true;
   let confirmRestart = true;
   let haptics = false;
+  let hapticStrength = 1;
+  let toastDuration = 1800;
 
   const el = {};
   const byId = id => document.getElementById(id);
@@ -679,7 +683,7 @@
     clearTimeout(toastTimer);
     el.toast.textContent = message;
     el.toast.classList.add("show");
-    toastTimer = setTimeout(() => el.toast.classList.remove("show"), 1800);
+    toastTimer = setTimeout(() => el.toast.classList.remove("show"), toastDuration);
   }
 
   function clearToast() {
@@ -744,8 +748,16 @@
   }
 
   function playSfx(kind, detail = 0) {
-    if (haptics && ["bomb", "win"].includes(kind)) window.navigator?.vibrate?.(kind === "bomb" ? 45 : [35, 35, 70]);
+    if (haptics && ["bomb", "win"].includes(kind)) {
+      const scale = value => Math.round(value * hapticStrength);
+      window.navigator?.vibrate?.(kind === "bomb" ? scale(45) : [scale(35), scale(35), scale(70)]);
+    }
     if (!state.sound) return;
+    const profile = {
+      soft: { volume: .76, duration: 1.18, type: "sine" },
+      classic: { volume: 1, duration: 1, type: null },
+      crisp: { volume: 1.08, duration: .78, type: "square" }
+    }[sfxProfile];
     const voices = {
       select: [[300 + Math.min(detail, 8) * 18, .035, .022, "sine", 0]],
       pass: [[220, .07, .018, "sine", 0]],
@@ -759,16 +771,22 @@
       finish: [[220, .18, .025, "triangle", 0], [196, .24, .02, "triangle", .12]],
       win: [[392, .12, .026, "triangle", 0], [493.88, .16, .024, "triangle", .08], [587.33, .28, .022, "triangle", .17]]
     }[kind] || [];
-    voices.forEach(([frequency, duration, volume, type, delay]) => playVoice(frequency * sfxPitch, duration, volume * sfxVolume, type, null, delay));
+    voices.forEach(([frequency, duration, volume, type, delay]) => playVoice(frequency * sfxPitch, duration * profile.duration, volume * sfxVolume * profile.volume, profile.type || type, null, delay));
   }
 
   function playBGMNote() {
     if (!state.music || document.hidden) return false;
     const step = bgmStep++ % BGM_MELODY.length;
     const note = BGM_MELODY[step];
-    const played = note ? playVoice(note, .85 / bgmTempo, .006 * bgmVolume, "triangle", bgmVoices) : false;
-    const bass = step % 4 === 0 && playVoice(BGM_BASS[step / 4], 2.6 / bgmTempo, .003 * bgmVolume, "sine", bgmVoices);
-    return (!note && step % 4 !== 0) || played || bass;
+    const texture = {
+      minimal: { melody: .0048, bass: 0, type: "sine" },
+      balanced: { melody: .006, bass: .003, type: "triangle" },
+      rich: { melody: .0065, bass: .0034, harmony: .0018, type: "triangle" }
+    }[bgmTexture];
+    const played = note ? playVoice(note, .85 / bgmTempo, texture.melody * bgmVolume, texture.type, bgmVoices) : false;
+    const bass = texture.bass && step % 4 === 0 && playVoice(BGM_BASS[step / 4], 2.6 / bgmTempo, texture.bass * bgmVolume, "sine", bgmVoices);
+    if (note && texture.harmony) playVoice(note * 1.5, .7 / bgmTempo, texture.harmony * bgmVolume, "sine", bgmVoices);
+    return (!note && step % 4 !== 0) || played || Boolean(bass);
   }
 
   function startBGM() {
@@ -895,9 +913,16 @@
   function setAudio(settings) {
     if (typeof settings.sfxVolume === "number") sfxVolume = Math.max(0, Math.min(1, settings.sfxVolume));
     if (typeof settings.bgmVolume === "number") bgmVolume = Math.max(0, Math.min(1, settings.bgmVolume));
-    if (typeof settings.sfxPitch === "number") sfxPitch = Math.max(.7, Math.min(1.4, settings.sfxPitch));
+    if (typeof settings.sfxPitch === "number") sfxPitch = Math.max(.5, Math.min(1.8, settings.sfxPitch));
+    if (["soft", "classic", "crisp"].includes(settings.sfxProfile)) sfxProfile = settings.sfxProfile;
+    if (["minimal", "balanced", "rich"].includes(settings.bgmTexture) && settings.bgmTexture !== bgmTexture) {
+      const wasPlaying = Boolean(bgmTimer);
+      if (wasPlaying) stopBGM();
+      bgmTexture = settings.bgmTexture;
+      if (wasPlaying && state.music) startBGM();
+    }
     if (typeof settings.bgmTempo === "number") {
-      const nextTempo = Math.max(.6, Math.min(1.6, settings.bgmTempo));
+      const nextTempo = Math.max(.5, Math.min(2, settings.bgmTempo));
       if (nextTempo !== bgmTempo && bgmTimer) {
         stopBGM();
         bgmTempo = nextTempo;
@@ -914,10 +939,12 @@
   }
 
   function setPreferences(settings) {
-    if (typeof settings.aiDelay === "number") aiDelay = Math.max(200, Math.min(2200, settings.aiDelay));
+    if (typeof settings.aiDelay === "number") aiDelay = Math.max(100, Math.min(3000, settings.aiDelay));
     if (typeof settings.autoScrollHints === "boolean") autoScrollHints = settings.autoScrollHints;
     if (typeof settings.confirmRestart === "boolean") confirmRestart = settings.confirmRestart;
     if (typeof settings.haptics === "boolean") haptics = settings.haptics;
+    if (typeof settings.hapticStrength === "number") hapticStrength = Math.max(.25, Math.min(2, settings.hapticStrength));
+    if (typeof settings.toastDuration === "number") toastDuration = Math.max(600, Math.min(5000, settings.toastDuration));
   }
 
   window.GuandanGame = {
