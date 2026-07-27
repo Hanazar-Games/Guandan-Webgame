@@ -5,7 +5,7 @@ const vm = require("node:vm");
 const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
 const css = fs.readFileSync(require.resolve("../styles.css"), "utf8");
 let source = fs.readFileSync(require.resolve("../script.js"), "utf8");
-source = source.replace("  initElements();", "  globalThis.__guandanState = state;\n  globalThis.__guandanTest = { endGame, updateSelectionTip };\n  initElements();");
+source = source.replace("  initElements();", "  globalThis.__guandanState = state;\n  globalThis.__guandanTest = { commitPass, endGame, updateSelectionTip };\n  initElements();");
 
 class FakeClassList {
   constructor() { this.values = new Set(); }
@@ -81,6 +81,16 @@ vm.createContext(context);
 vm.runInContext(source, context);
 
 assert.equal(context.__guandanState.hands.map(hand => hand.length).join(","), "27,27,27,27");
+assert.match(html, /id="home-screen"[\s\S]*id="single-player-button"[\s\S]*id="lan-button"/, "主页面应提供单机与局域网入口");
+assert.match(html, /id="settings-dialog"[\s\S]*id="setting-sfx"[\s\S]*id="setting-bgm"[\s\S]*id="language-select"/, "设置中心应包含音效、音乐与语言设置");
+assert.equal((html.match(/<option value="(?:zh-CN|zh-TW|en|ja|ko|es|fr|de|pt|ru)"/g) || []).length, 10, "语言设置应提供 10 种语言");
+assert.equal((html.match(/class="tutorial-slide(?: active)?"/g) || []).length, 5, "新手教程应包含五个步骤");
+assert.match(html, /id="lan-dialog"[\s\S]*id="create-room"[\s\S]*id="join-room"[\s\S]*id="start-lan-game"/, "局域网大厅应具备建房、加入和开始入口");
+assert.match(html, /https:\/\/github\.com\/Hanazar-Games\/Guandan-Webgame\/issues/);
+assert.match(html, /https:\/\/github\.com\/Hanazar-Games\/Guandan-Webgame\/discussions/);
+assert.match(html, /https:\/\/github\.com\/hzagaming/);
+assert.match(html, /https:\/\/hanazargames\.com\//);
+assert.match(html, /<script src="app\.js"><\/script>/, "应用外壳脚本应在游戏引擎后加载");
 assert.match(html, /id="player-hand"[^>]*role="group"/, "手牌容器应向读屏声明为一组控件");
 assert.match(elements.get("player-hand").innerHTML, /aria-pressed="false"/);
 assert.equal(elements.get("play-button").disabled, true, "未选择合法牌型时不应允许出牌");
@@ -88,6 +98,14 @@ assert.equal(elements.get("sound-button").attributes.get("aria-pressed"), "true"
 assert.equal(elements.get("music-button").attributes.get("aria-pressed"), "false");
 assert.equal(elements.get("sound-button").attributes.get("title"), "关闭音效");
 assert.equal(elements.get("music-button").attributes.get("title"), "开启背景音乐");
+
+let leadingSpacePrevented = false;
+documentListeners.get("keydown")[0]({
+  key: " ",
+  target: { closest: () => null },
+  preventDefault() { leadingSpacePrevented = true; }
+});
+assert.equal(leadingSpacePrevented, true, "领牌时按空格也应阻止页面滚动");
 
 const firstCard = context.__guandanState.hands[0][0];
 const cardButton = new FakeElement("selected-card");
@@ -146,6 +164,24 @@ assert.equal(elements.get("toast").classList.contains("show"), false, "重开后
 elements.get("hint-button").listeners.get("click")[0]();
 assert.equal(selectionReveals, 1, "提示选牌后应将结果滚动到可视区域");
 
+context.__guandanState.currentPlay = { cards: [], combo: { type: "jokerbomb", value: 99, size: 4, bombPower: 9999 } };
+context.__guandanState.lastPlayer = 1;
+elements.get("hint-button").listeners.get("click")[0]();
+assert.equal(elements.get("selection-tip").classList.contains("advice"), true, "无牌可压时应显示中性建议");
+assert.equal(elements.get("selection-tip").classList.contains("error"), false, "正常的过牌建议不应显示为错误");
+assert.match(elements.get("footer-tip").textContent, /建议选择不出/, "无牌可压时应给出下一步操作");
+
+const receptionCard = context.__guandanState.hands[0][0];
+context.__guandanState.finishOrder = [0];
+context.__guandanState.currentPlayer = 3;
+context.__guandanState.currentPlay = { cards: [receptionCard], combo: { type: "single", value: 3, size: 1 } };
+context.__guandanState.lastPlayer = 0;
+context.__guandanState.passCount = 2;
+context.__guandanTest.commitPass(3);
+assert.equal(context.__guandanState.currentPlayer, 2, "出完牌者无人压制时应由仍在场的对家接风");
+assert.equal(context.__guandanState.currentPlay, null, "接风前应清空上一轮牌型");
+assert.match(elements.get("footer-tip").textContent, /林默 接风领牌/, "接风应提供清晰的桌面反馈");
+
 elements.get("play-button").classList.add("power");
 elements.get("selection-tip").classList.add("power");
 context.__guandanState.finishOrder = [0, 2, 1, 3];
@@ -173,7 +209,11 @@ assert.match(css, /\.toast\s*\{[^}]*max-width:\s*calc\(100vw - 24px\);/s, "Toast
 assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*?\.score-team small\s*\{\s*display:\s*none;/, "移动端计分牌应隐藏次要胜局信息");
 assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.ranking\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/s, "移动结果排名应使用 2×2 布局");
 assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.action-area\s*\{[^}]*right:\s*8px;[^}]*left:\s*auto;/s, "窄屏操作区应避开底部玩家信息");
+assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.topbar\s*\{[^}]*env\(safe-area-inset-right/, "窄屏顶部控件应避开设备安全区");
+assert.match(css, /\.hand-scroll\s*\{[^}]*overscroll-behavior-x:\s*contain;/s, "横向浏览手牌时不应带动整页滚动");
 assert.match(html, /id="selection-tip"[^>]*aria-live="polite"/, "选牌结果应以礼貌模式向读屏播报");
+assert.match(html, /class="rules-note"[\s\S]*暂不包含进贡、还贡与抗贡/, "规则弹窗应明确练习版边界");
+assert.match(html, /无人压牌[^<]*对家接风/, "规则弹窗应说明接风流程");
 assert.match(html, /id="play-button"[^>]*aria-keyshortcuts="Enter"/, "主要操作应公开键盘快捷键");
 
 for (const id of ["sound-button", "music-button", "help-button", "new-game-button", "pass-button", "hint-button", "play-button"]) {
@@ -200,6 +240,33 @@ assert.match(css, /@media \(max-height:\s*500px\) and \(min-width:761px\)[\s\S]*
 assert.match(css, /\.card\.level-card::after\s*\{[^}]*content:\s*"级";/s, "级牌应有清晰的大牌徽标");
 assert.match(css, /\.card\.level-card::after\s*\{[^}]*left:\s*5px;[^}]*right:\s*auto;/s, "级牌徽标应放在不会被后牌遮挡的左下角");
 assert.match(css, /\.selection-tip\.power\s*\{[^}]*color:\s*var\(--gold-bright\);/s, "炸弹等大牌组合应使用强化反馈");
+assert.match(css, /\.selection-tip\.advice\s*\{[^}]*color:\s*#b9ddd5;/s, "过牌建议应使用区别于错误的中性反馈");
+assert.match(css, /@keyframes hero-enter/, "主页面应具备入场动画");
+assert.match(css, /@keyframes hand-deal/, "发牌过程应具备错峰动画");
+assert.match(css, /body\.reduced-motion/, "设置应允许主动减少动画");
+assert.match(css, /\.setting-toggle input:focus-visible \+ i/, "自定义设置开关应显示键盘焦点");
+assert.match(css, /\.tutorial-modal\s*\{[^}]*overflow:\s*auto;/s, "矮屏教程弹窗应允许滚动到底部操作");
+assert.match(css, /@media \(max-height:\s*600px\) and \(min-width:761px\)[\s\S]*?\.home-screen\s*\{[^}]*overflow:\s*auto;/s, "短横屏主页面不应裁掉入口");
 assert.match(css, /@media \(max-height:\s*740px\) and \(min-width:761px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*23%;[^}]*transform:\s*translateX\(-50%\);/s, "短屏中央状态不得受内容高度影响并遮挡顶部牌背");
+
+const lanMessages = [];
+context.window.GuandanGame.configureLan({ seat: 0, host: true, humanSeats: [0, 1], names: ["房主", "访客", "AI 1", "AI 2"], send: payload => lanMessages.push(payload) });
+context.__guandanState.locked = false;
+context.__guandanState.currentPlay = null;
+context.__guandanState.currentPlayer = 1;
+const remoteHandSize = context.__guandanState.hands[1].length;
+context.window.GuandanGame.handleLanAction(1, { action: "play", cards: [context.__guandanState.hands[1][0].id] });
+assert.equal(context.__guandanState.hands[1].length, remoteHandSize - 1, "房主应使用同一规则引擎执行远端玩家动作");
+assert.equal(lanMessages.some(message => message.type === "snapshot"), true, "房主执行动作后应广播最新牌局");
+context.window.GuandanGame.configureLan({ seat: 0, host: false, humanSeats: [0, 1], names: ["访客", "房主", "AI 1", "AI 2"], send() { throw new Error("offline"); } });
+context.__guandanState.currentPlayer = 0;
+context.__guandanState.currentPlay = null;
+context.__guandanState.locked = false;
+context.__guandanState.finishOrder = [];
+context.__guandanState.selected.add(context.__guandanState.hands[0][0].id);
+assert.doesNotThrow(() => elements.get("play-button").listeners.get("click")[0](), "访客发送失败不应穿透到全局事件循环");
+assert.equal(elements.get("play-button").disabled, false, "访客发送失败后应恢复出牌按钮以便重试");
+assert.match(elements.get("toast").textContent, /发送失败/, "访客发送失败后应提供明确反馈");
+context.window.GuandanGame.startSingle();
 
 console.log("UI 启动测试通过：DOM、发牌、牌面语义、音频控制和弹窗事件均已接线。");

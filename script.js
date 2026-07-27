@@ -3,7 +3,8 @@
 
   const SUITS = ["♠", "♥", "♣", "♦"];
   const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-  const NAMES = ["你", "周舟", "林默", "许晏"];
+  const DEFAULT_NAMES = ["牌手", "周舟", "林默", "许晏"];
+  let NAMES = [...DEFAULT_NAMES];
   const LEVELS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
   const COMBO_NAMES = {
     single: "单张", pair: "对子", triple: "三张", fullhouse: "三带二",
@@ -30,11 +31,18 @@
     teamLevels: ["2", "2"],
     teamWins: [0, 0],
     dealer: 0,
-    lastAdvance: 0
+    lastAdvance: 0,
+    localPlayer: 0,
+    animateDeal: false,
+    lan: null
   };
+
+  let sfxVolume = 1;
+  let bgmVolume = .7;
 
   const el = {};
   const byId = id => document.getElementById(id);
+  const seatAt = position => (state.localPlayer + position) % 4;
 
   function initElements() {
     ["round-number", "level-rank", "status-text", "played-by", "played-cards", "combo-label",
@@ -197,26 +205,29 @@
     return combo.type === target.type && combo.size === target.size && combo.value > target.value;
   }
 
-  function cardMarkup(card, selectable = false) {
+  function cardMarkup(card, selectable = false, cardIndex = null) {
     const red = card.suit === "♥" || card.suit === "♦" || card.big;
     const levelCard = !card.joker && card.rank === state.level;
-    const interactive = state.currentPlayer === 0 && !state.locked && !state.finishOrder.includes(0);
+    const interactive = state.currentPlayer === state.localPlayer && !state.locked && !state.finishOrder.includes(state.localPlayer);
     const selected = selectable && state.selected.has(card.id);
-    const classes = ["card", red ? "red" : "", card.joker ? "card-joker" : "", card.big ? "joker-big" : "", levelCard ? "level-card" : "", isWild(card) ? "wild" : "", selected ? "selected" : ""].filter(Boolean).join(" ");
+    const classes = ["card", cardIndex === null ? "" : "deal-card", red ? "red" : "", card.joker ? "card-joker" : "", card.big ? "joker-big" : "", levelCard ? "level-card" : "", isWild(card) ? "wild" : "", selected ? "selected" : ""].filter(Boolean).join(" ");
     const rankText = card.joker ? (card.big ? "大王" : "小王") : card.rank;
     const center = card.joker ? (card.big ? "王" : "王") : card.suit;
     const aria = card.joker ? rankText : `${card.suit}${card.rank}${levelCard ? "，级牌" : ""}${isWild(card) ? "，逢人配" : ""}`;
     const tag = selectable ? "button" : "div";
     const attributes = selectable ? `data-card-id="${card.id}" type="button" aria-pressed="${selected}"${interactive ? "" : " disabled"}` : 'role="img"';
-    return `<${tag} class="${classes}" ${attributes} aria-label="${aria}">
+    const style = cardIndex === null ? "" : ` style="--card-index:${cardIndex}"`;
+    return `<${tag} class="${classes}" ${attributes}${style} aria-label="${aria}">
       <span class="card-corner"><span>${card.joker ? (card.big ? "大王" : "小王") : card.rank}</span>${card.joker ? "" : `<span class="card-suit">${card.suit}</span>`}</span>
       <span class="card-center">${center}</span>
     </${tag}>`;
   }
 
   function renderHand() {
-    sortHand(state.hands[0]);
-    el["player-hand"].innerHTML = state.hands[0].map(c => cardMarkup(c, true)).join("");
+    const hand = state.hands[state.localPlayer];
+    sortHand(hand);
+    el["player-hand"].innerHTML = hand.map((card, index) => cardMarkup(card, true, state.animateDeal ? index : null)).join("");
+    state.animateDeal = false;
   }
 
   function revealSelection() {
@@ -227,10 +238,10 @@
   }
 
   function renderOpponents() {
-    for (let i = 1; i < 4; i++) {
-      const count = state.hands[i].length;
+    for (let position = 1; position < 4; position++) {
+      const count = state.hands[seatAt(position)].length;
       const visible = Math.min(12, Math.ceil(count / 2));
-      byId(`opponent-hand-${i}`).innerHTML = Array.from({ length: visible }, () => '<i class="card-back"></i>').join("");
+      byId(`opponent-hand-${position}`).innerHTML = Array.from({ length: visible }, () => '<i class="card-back"></i>').join("");
     }
   }
 
@@ -247,42 +258,48 @@
   }
 
   function render() {
-    for (let i = 0; i < 4; i++) {
-      byId(`count-${i}`).textContent = state.hands[i].length;
-      byId(`player-${i}`).classList.toggle("active", i === state.currentPlayer && !state.locked);
-      byId(`player-${i}`).classList.toggle("finished", state.finishOrder.includes(i));
-      byId(`player-${i}`).classList.toggle("dealer", i === state.dealer);
+    for (let position = 0; position < 4; position++) {
+      const seat = seatAt(position);
+      byId(`count-${position}`).textContent = state.hands[seat].length;
+      byId(`player-${position}`).classList.toggle("active", seat === state.currentPlayer && !state.locked);
+      byId(`player-${position}`).classList.toggle("finished", state.finishOrder.includes(seat));
+      byId(`player-${position}`).classList.toggle("dealer", seat === state.dealer);
+      byId(`name-${position}`).textContent = NAMES[seat];
+      byId(`avatar-${position}`).textContent = position === 0 ? "你" : NAMES[seat].slice(0, 1);
     }
     renderHand();
     renderOpponents();
     renderCurrentPlay();
 
-    const humanTurn = state.currentPlayer === 0 && !state.locked && !state.finishOrder.includes(0);
+    const humanTurn = state.currentPlayer === state.localPlayer && !state.locked && !state.finishOrder.includes(state.localPlayer);
     const selectedCombo = detectCombo(selectedCards());
     el["play-button"].disabled = !humanTurn || !canBeat(selectedCombo, state.currentPlay?.combo);
     el["hint-button"].disabled = !humanTurn;
     el["pass-button"].disabled = !humanTurn || !state.currentPlay;
-    el["new-game-button"].disabled = state.locked;
+    el["new-game-button"].disabled = state.locked || (state.lan && !state.lan.host);
     el["help-button"].disabled = state.locked;
     el["status-text"].textContent = state.locked ? "本局已经结束" : humanTurn ? "轮到你出牌" : `${NAMES[state.currentPlayer]} 正在思考`;
     document.querySelector(".status-dot").classList.toggle("thinking", !humanTurn && !state.locked);
-    el["our-level"].textContent = state.teamLevels[0];
-    el["their-level"].textContent = state.teamLevels[1];
-    el["our-wins"].textContent = `${state.teamWins[0]} 胜`;
-    el["their-wins"].textContent = `${state.teamWins[1]} 胜`;
+    const ourTeam = state.localPlayer % 2;
+    el["our-level"].textContent = state.teamLevels[ourTeam];
+    el["their-level"].textContent = state.teamLevels[1 - ourTeam];
+    el["our-wins"].textContent = `${state.teamWins[ourTeam]} 胜`;
+    el["their-wins"].textContent = `${state.teamWins[1 - ourTeam]} 胜`;
+    syncLanState();
   }
 
   function selectedCards() {
-    return state.hands[0].filter(c => state.selected.has(c.id));
+    return state.hands[state.localPlayer].filter(c => state.selected.has(c.id));
   }
 
   function updateSelectionTip() {
     const cards = selectedCards();
-    const humanTurn = state.currentPlayer === 0 && !state.locked && !state.finishOrder.includes(0);
+    const humanTurn = state.currentPlayer === state.localPlayer && !state.locked && !state.finishOrder.includes(state.localPlayer);
     if (!humanTurn) {
       el["play-button"].disabled = true;
       el["play-button"].classList.toggle("power", false);
       el["selection-tip"].classList.remove("error");
+      el["selection-tip"].classList.remove("advice");
       el["selection-tip"].classList.toggle("valid", false);
       el["selection-tip"].classList.toggle("power", false);
       el["selection-tip"].textContent = state.locked ? "本局已结束" : `等待${NAMES[state.currentPlayer]}出牌`;
@@ -294,6 +311,7 @@
     el["play-button"].disabled = !humanTurn || !playable;
     el["play-button"].classList.toggle("power", power);
     el["selection-tip"].classList.remove("error");
+    el["selection-tip"].classList.remove("advice");
     el["selection-tip"].classList.toggle("valid", playable);
     el["selection-tip"].classList.toggle("power", power);
     if (!cards.length) el["selection-tip"].textContent = "请选择要出的牌";
@@ -304,7 +322,7 @@
 
   function handleCardClick(event) {
     const card = event.target.closest("[data-card-id]");
-    if (!card || state.currentPlayer !== 0 || state.locked) return;
+    if (!card || state.currentPlayer !== state.localPlayer || state.locked) return;
     const id = card.dataset.cardId;
     if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
     card.classList.toggle("selected", state.selected.has(id));
@@ -344,7 +362,7 @@
     state.currentPlayer = nextActive(fromPlayer);
     render();
     updateSelectionTip();
-    if (state.currentPlayer === 0) playSfx("turn");
+    if (state.currentPlayer === state.localPlayer) playSfx("turn");
     scheduleAI();
   }
 
@@ -354,19 +372,38 @@
     return next;
   }
 
+  function sendLanAction(payload) {
+    const recover = () => {
+      render();
+      updateSelectionTip();
+      showToast("发送失败，请检查网络后重试");
+    };
+    try { Promise.resolve(state.lan.send(payload)).catch(recover); } catch (_) { recover(); }
+  }
+
   function humanPlay() {
-    if (state.currentPlayer !== 0 || state.locked) return;
+    if (state.currentPlayer !== state.localPlayer || state.locked) return;
     const cards = selectedCards();
     const combo = detectCombo(cards);
     if (!combo) return invalid("这几张牌不能组成当前支持的牌型");
     if (!canBeat(combo, state.currentPlay?.combo)) return invalid("牌型或点数不够，无法压过上家");
-    commitPlay(0, cards, combo);
+    if (state.lan && !state.lan.host) {
+      el["play-button"].disabled = true;
+      sendLanAction({ type: "action", action: "play", cards: cards.map(card => card.id) });
+      return;
+    }
+    commitPlay(state.localPlayer, cards, combo);
   }
 
   function humanPass() {
-    if (state.currentPlayer !== 0 || state.locked || !state.currentPlay) return;
+    if (state.currentPlayer !== state.localPlayer || state.locked || !state.currentPlay) return;
     state.selected.clear();
-    commitPass(0);
+    if (state.lan && !state.lan.host) {
+      el["pass-button"].disabled = true;
+      sendLanAction({ type: "action", action: "pass" });
+      return;
+    }
+    commitPass(state.localPlayer);
   }
 
   function commitPass(player) {
@@ -376,24 +413,32 @@
     const activeCount = 4 - state.finishOrder.length;
     const leaderActive = !state.finishOrder.includes(state.lastPlayer);
     const passesToReset = activeCount - (leaderActive ? 1 : 0);
-    const next = nextActive(player);
+    const trickLeader = state.lastPlayer;
+    let next = nextActive(player);
+    let reception = false;
     if (state.passCount >= passesToReset) {
+      const partner = trickLeader === null ? null : (trickLeader + 2) % 4;
+      if (partner !== null && state.finishOrder.includes(trickLeader) && !state.finishOrder.includes(partner)) {
+        next = partner;
+        reception = true;
+      }
       state.currentPlay = null;
       state.lastPlayer = null;
       state.passCount = 0;
-      el["footer-tip"].textContent = "一轮结束，重新领牌";
+      el["footer-tip"].textContent = reception ? `${NAMES[next]} 接风领牌` : "一轮结束，重新领牌";
     } else {
       el["footer-tip"].textContent = `${NAMES[player]} 选择不出`;
     }
     state.currentPlayer = next;
     render();
     updateSelectionTip();
-    if (state.currentPlayer === 0) playSfx("turn");
+    if (state.currentPlayer === state.localPlayer) playSfx("turn");
     scheduleAI();
   }
 
   function invalid(message) {
     el["selection-tip"].textContent = message;
+    el["selection-tip"].classList.remove("advice");
     el["selection-tip"].classList.add("error");
     showToast(message);
     playSfx("error");
@@ -489,7 +534,8 @@
   function scheduleAI() {
     clearTimeout(state.timer);
     state.timer = null;
-    if (state.locked || state.currentPlayer === 0 || document.hidden || el["rules-dialog"].open || el["restart-dialog"].open) return;
+    const humanSeat = state.lan ? state.lan.humanSeats.includes(state.currentPlayer) : state.currentPlayer === state.localPlayer;
+    if (state.locked || humanSeat || (state.lan && !state.lan.host) || document.hidden || el["rules-dialog"].open || el["restart-dialog"].open) return;
     const player = state.currentPlayer;
     state.timer = setTimeout(() => {
       if (state.locked || state.currentPlayer !== player) return;
@@ -517,20 +563,23 @@
   }
 
   function hint() {
-    if (state.currentPlayer !== 0 || state.locked) return;
-    const teammateLeading = state.lastPlayer !== null && state.lastPlayer % 2 === 0;
-    const move = findAIMove(state.hands[0], state.currentPlay?.combo || null, teammateLeading);
+    if (state.currentPlayer !== state.localPlayer || state.locked) return;
+    const teammateLeading = state.lastPlayer !== null && state.lastPlayer % 2 === state.localPlayer % 2;
+    const move = findAIMove(state.hands[state.localPlayer], state.currentPlay?.combo || null, teammateLeading);
     state.selected.clear();
     if (!move) {
       renderHand();
       updateSelectionTip();
+      el["selection-tip"].classList.add("advice");
       if (teammateLeading) {
-        el["selection-tip"].classList.remove("error");
         el["selection-tip"].textContent = "队友领牌，建议不出";
         el["footer-tip"].textContent = "保留牌力，让队友继续领牌";
-        return;
+      } else {
+        el["selection-tip"].textContent = "没有能压过的牌，建议不出";
+        el["footer-tip"].textContent = "建议选择不出，等待下一轮";
       }
-      return invalid(state.currentPlay ? "没有能压过的牌，建议不出" : "暂无可用提示");
+      playSfx("hint");
+      return;
     }
     move.cards.forEach(c => state.selected.add(c.id));
     renderHand();
@@ -567,6 +616,7 @@
     state.selected.clear();
     state.finishOrder = [];
     state.locked = false;
+    state.animateDeal = true;
     state.history = [];
     el["round-number"].textContent = state.round;
     el["level-rank"].textContent = state.level;
@@ -575,6 +625,7 @@
     if (el["result-dialog"].open) el["result-dialog"].close();
     render();
     updateSelectionTip();
+    playSfx("deal");
     scheduleAI();
   }
 
@@ -587,7 +638,7 @@
     state.locked = true;
     pauseAI();
     const winnerTeam = state.finishOrder[0] % 2;
-    const ourWin = winnerTeam === 0;
+    const ourWin = winnerTeam === state.localPlayer % 2;
     const teamRanks = state.finishOrder.filter(i => i % 2 === winnerTeam).map(i => state.finishOrder.indexOf(i) + 1);
     const sweep = teamRanks[0] === 1 && teamRanks[1] === 2;
     const advance = teamRanks[1] === 2 ? 3 : teamRanks[1] === 3 ? 2 : 1;
@@ -651,6 +702,7 @@
   }
 
   function playVoice(frequency, duration, volume, type = "sine", voices = null, delay = 0) {
+    if (volume <= 0) return true;
     const ctx = getAudioContext();
     if (!ctx) return false;
     try {
@@ -690,6 +742,7 @@
       select: [[300 + Math.min(detail, 8) * 18, .035, .022, "sine", 0]],
       pass: [[220, .07, .018, "sine", 0]],
       hint: [[480, .06, .025, "triangle", 0], [720, .09, .018, "triangle", .045]],
+      deal: [[260, .05, .018, "triangle", 0], [330, .06, .016, "triangle", .055], [410, .08, .014, "triangle", .11]],
       play: [[410, .065, .028, "triangle", 0], [620, .1, .022, "sine", .045]],
       turn: [[523.25, .07, .022, "sine", .14], [659.25, .11, .018, "sine", .21]],
       bomb: [[105, .24, .045, "sawtooth", 0], [158, .2, .035, "square", .035]],
@@ -698,15 +751,15 @@
       finish: [[220, .18, .025, "triangle", 0], [196, .24, .02, "triangle", .12]],
       win: [[392, .12, .026, "triangle", 0], [493.88, .16, .024, "triangle", .08], [587.33, .28, .022, "triangle", .17]]
     }[kind] || [];
-    voices.forEach(([frequency, duration, volume, type, delay]) => playVoice(frequency, duration, volume, type, null, delay));
+    voices.forEach(([frequency, duration, volume, type, delay]) => playVoice(frequency, duration, volume * sfxVolume, type, null, delay));
   }
 
   function playBGMNote() {
     if (!state.music || document.hidden) return false;
     const step = bgmStep++ % BGM_MELODY.length;
     const note = BGM_MELODY[step];
-    const played = note ? playVoice(note, .85, .006, "triangle", bgmVoices) : false;
-    const bass = step % 4 === 0 && playVoice(BGM_BASS[step / 4], 2.6, .003, "sine", bgmVoices);
+    const played = note ? playVoice(note, .85, .006 * bgmVolume, "triangle", bgmVoices) : false;
+    const bass = step % 4 === 0 && playVoice(BGM_BASS[step / 4], 2.6, .003 * bgmVolume, "sine", bgmVoices);
     return (!note && step % 4 !== 0) || played || bass;
   }
 
@@ -744,9 +797,124 @@
       button.setAttribute("aria-label", action);
       button.setAttribute("title", action);
     });
+    window.dispatchEvent?.(new CustomEvent("guandan:audio", { detail: { sound: state.sound, music: state.music, sfxVolume, bgmVolume } }));
   }
 
+  function lanSnapshot() {
+    return {
+      level: state.level, round: state.round, hands: state.hands, currentPlayer: state.currentPlayer,
+      currentPlay: state.currentPlay, lastPlayer: state.lastPlayer, passCount: state.passCount,
+      finishOrder: state.finishOrder, locked: state.locked, history: state.history,
+      teamLevels: state.teamLevels, teamWins: state.teamWins, dealer: state.dealer,
+      lastAdvance: state.lastAdvance, names: NAMES,
+      result: {
+        title: el["result-title"].textContent, copy: el["result-copy"].textContent,
+        ranking: el.ranking.innerHTML, again: el["again-button"].textContent,
+        resetMatch: el["again-button"].dataset.resetMatch
+      }
+    };
+  }
+
+  function syncLanState() {
+    if (state.lan?.host) Promise.resolve(state.lan.send({ type: "snapshot", state: lanSnapshot() })).catch(() => {});
+  }
+
+  function configureLan({ seat, host, humanSeats, names, send }) {
+    pauseAI();
+    state.localPlayer = seat;
+    state.lan = { host, humanSeats: [...humanSeats], send };
+    NAMES = [...names];
+    state.selected.clear();
+    state.animateDeal = !host;
+  }
+
+  function updateLanPlayers(humanSeats, names) {
+    if (!state.lan) return;
+    state.lan.humanSeats = [...humanSeats];
+    NAMES = [...names];
+    render();
+    updateSelectionTip();
+    scheduleAI();
+  }
+
+  function applyLanSnapshot(snapshot) {
+    if (!state.lan || state.lan.host) return;
+    const previousPlayer = state.currentPlayer;
+    const previousHistorySize = state.history.length;
+    const wasLocked = state.locked;
+    if (snapshot.round !== state.round || (wasLocked && !snapshot.locked)) state.animateDeal = true;
+    const fields = ["level", "round", "hands", "currentPlayer", "currentPlay", "lastPlayer", "passCount", "finishOrder", "locked", "history", "teamLevels", "teamWins", "dealer", "lastAdvance"];
+    fields.forEach(field => { state[field] = snapshot[field]; });
+    NAMES = [...snapshot.names];
+    state.selected.clear();
+    el["round-number"].textContent = state.round;
+    el["level-rank"].textContent = state.level;
+    if (snapshot.result) {
+      el["result-title"].textContent = snapshot.result.title;
+      el["result-copy"].textContent = snapshot.result.copy;
+      el.ranking.innerHTML = snapshot.result.ranking;
+      el["again-button"].textContent = state.locked ? "等待房主继续" : snapshot.result.again;
+      el["again-button"].disabled = state.locked;
+    }
+    if (!state.locked && el["result-dialog"].open) el["result-dialog"].close();
+    const firstDeal = state.animateDeal;
+    render();
+    updateSelectionTip();
+    if (firstDeal) playSfx("deal");
+    if (state.history.length > previousHistorySize) {
+      const action = state.history.at(-1);
+      playSfx(action.action === "pass" ? "pass" : isBomb(state.currentPlay?.combo) ? "bomb" : "play");
+    }
+    if (previousPlayer !== state.localPlayer && state.currentPlayer === state.localPlayer && !state.locked) playSfx("turn");
+    if (!wasLocked && state.locked) playSfx(state.finishOrder[0] % 2 === state.localPlayer % 2 ? "win" : "finish");
+    if (state.locked && !el["result-dialog"].open) el["result-dialog"].showModal();
+  }
+
+  function handleLanAction(player, payload) {
+    if (!state.lan?.host || !state.lan.humanSeats.includes(player) || state.currentPlayer !== player || state.locked) return syncLanState();
+    if (payload.action === "pass") {
+      if (state.currentPlay) commitPass(player); else syncLanState();
+      return;
+    }
+    if (payload.action !== "play" || !Array.isArray(payload.cards)) return syncLanState();
+    const ids = new Set(payload.cards);
+    const cards = state.hands[player].filter(card => ids.has(card.id));
+    const combo = cards.length === ids.size ? detectCombo(cards) : null;
+    if (!combo || !canBeat(combo, state.currentPlay?.combo)) return syncLanState();
+    commitPlay(player, cards, combo);
+  }
+
+  function setAudio(settings) {
+    if (typeof settings.sfxVolume === "number") sfxVolume = Math.max(0, Math.min(1, settings.sfxVolume));
+    if (typeof settings.bgmVolume === "number") bgmVolume = Math.max(0, Math.min(1, settings.bgmVolume));
+    if (typeof settings.sound === "boolean") state.sound = settings.sound;
+    if (typeof settings.music === "boolean") {
+      state.music = settings.music;
+      if (state.music && !startBGM()) state.music = false;
+      if (!state.music) stopBGM();
+    }
+    syncAudioButtons();
+  }
+
+  window.GuandanGame = {
+    pause: pauseAI,
+    startSingle() {
+      state.localPlayer = 0;
+      state.lan = null;
+      NAMES = [...DEFAULT_NAMES];
+      el["again-button"].disabled = false;
+      startGame(true);
+    },
+    configureLan,
+    updateLanPlayers,
+    startLanGame() { if (state.lan?.host) startGame(true); },
+    applyLanSnapshot,
+    handleLanAction,
+    setAudio
+  };
+
   function shortcutAction(event) {
+    if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return null;
     if (event.target.closest?.("button, dialog")) return null;
     if (event.key === "Enter") return "play";
     if (event.key === " ") return "pass";
@@ -807,9 +975,12 @@
     });
     document.addEventListener("keydown", event => {
       const action = shortcutAction(event);
-      if (!action || state.currentPlayer !== 0 || state.locked) return;
+      if (!action || state.currentPlayer !== state.localPlayer || state.locked) return;
       if (action === "play" && !el["play-button"].disabled) humanPlay();
-      if (action === "pass" && state.currentPlay) { event.preventDefault(); humanPass(); }
+      if (action === "pass") {
+        event.preventDefault();
+        if (state.currentPlay) humanPass();
+      }
       if (action === "hint") hint();
     });
     syncAudioButtons();

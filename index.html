@@ -4,12 +4,55 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#071b18" />
-    <meta name="description" content="四人掼蛋单机对局" />
-    <title>掼蛋 · 牌桌 v0.6</title>
+    <meta name="description" content="四人掼蛋单机与局域网对局" />
+    <title>掼蛋 · Hanazar Games v0.7</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="game-shell">
+    <main class="home-screen" id="home-screen">
+      <div class="home-aurora" aria-hidden="true"></div>
+      <div class="floating-card card-one" aria-hidden="true">A<span>♠</span></div>
+      <div class="floating-card card-two red" aria-hidden="true">王<span>★</span></div>
+      <div class="floating-card card-three red" aria-hidden="true">2<span>♥</span></div>
+      <header class="home-nav">
+        <div class="brand" aria-label="掼蛋牌桌">
+          <span class="brand-mark">掼</span>
+          <div><h1>掼蛋</h1><p>HANAZAR GAMES</p></div>
+        </div>
+        <div class="home-nav-actions">
+          <a class="ghost-link" href="https://hanazargames.com/" target="_blank" rel="noopener" data-i18n="officialHome">返回官网</a>
+          <button class="icon-button" id="home-settings-button" type="button" aria-label="游戏设置" title="游戏设置">
+            <svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="hero-panel">
+        <div class="hero-copy">
+          <p class="hero-kicker" data-i18n="heroKicker">四人结盟 · 牌局争锋</p>
+          <h2 data-i18n="heroTitle">一桌掼蛋，<em>胜负由你。</em></h2>
+          <p class="hero-description" data-i18n="heroDescription">完整单机练习与局域网房间。识别牌型、配合对家，在每一次出牌中掌控节奏。</p>
+          <div class="home-actions">
+            <button class="home-primary" id="single-player-button" type="button"><span class="action-index">01</span><span><b data-i18n="singlePlayer">单机练习</b><small data-i18n="singleDescription">与三位本地 AI 对局</small></span><i>→</i></button>
+            <button class="home-secondary" id="lan-button" type="button"><span class="action-index">02</span><span><b data-i18n="lanGame">局域网联机</b><small data-i18n="lanDescription">同一网络，房间码加入</small></span><i>↗</i></button>
+            <button class="home-compact" id="tutorial-button" type="button"><span>?</span><b data-i18n="tutorial">新手教程</b></button>
+            <button class="home-compact" id="settings-button" type="button"><span>⚙</span><b data-i18n="settings">游戏设置</b></button>
+          </div>
+        </div>
+
+        <aside class="announcement-card">
+          <div class="announcement-head"><span data-i18n="announcement">最新公告</span><time>2026.07.27</time></div>
+          <div class="announcement-icon">07</div>
+          <h3 data-i18n="announcementTitle">局域网对局与体验升级</h3>
+          <p data-i18n="announcementCopy">新增房间联机、10 种界面语言、分步教程、完整设置中心与更丰富的牌桌动画。</p>
+          <div class="announcement-tags"><span>LAN</span><span>UI/UX</span><span>SFX</span></div>
+        </aside>
+      </section>
+
+      <footer class="home-footer"><span>v0.7.0 · Hanazar Games</span><span class="server-ready"><i></i><span data-i18n="ready">准备就绪</span></span></footer>
+    </main>
+
+    <main class="game-shell view-hidden" id="game-screen">
       <header class="topbar">
         <div class="brand" aria-label="掼蛋牌桌">
           <span class="brand-mark">掼</span>
@@ -26,6 +69,9 @@
         </div>
 
         <div class="header-actions">
+          <button class="icon-button" id="home-button" type="button" aria-label="返回主页面" title="返回主页面">
+            <svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7"/><path d="M6 10v10h12V10M10 20v-6h4v6"/></svg>
+          </button>
           <button class="icon-button" id="sound-button" type="button" aria-label="关闭音效" aria-pressed="true" title="关闭音效">
             <svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4Z"/><path d="M16 9.5a4 4 0 0 1 0 5"/><path d="M18.5 7a7.5 7.5 0 0 1 0 10"/></svg>
           </button>
@@ -55,29 +101,29 @@
 
         <section class="player player-top" id="player-2">
           <div class="avatar-wrap">
-            <div class="avatar avatar-cyan">林</div>
+            <div class="avatar avatar-cyan" id="avatar-2">林</div>
             <span class="partner-dot" title="你的队友"></span>
           </div>
           <div class="player-copy">
-            <div class="name-line"><strong>林默</strong><span>队友</span></div>
+            <div class="name-line"><strong id="name-2">林默</strong><span data-i18n="teammate">队友</span></div>
             <div class="card-count"><i></i><span id="count-2">27</span> 张</div>
           </div>
           <div class="turn-pill" id="turn-2">思考中</div>
         </section>
 
         <section class="player player-left" id="player-1">
-          <div class="avatar avatar-amber">周</div>
+          <div class="avatar avatar-amber" id="avatar-1">周</div>
           <div class="player-copy">
-            <div class="name-line"><strong>周舟</strong></div>
+            <div class="name-line"><strong id="name-1">周舟</strong></div>
             <div class="card-count"><i></i><span id="count-1">27</span> 张</div>
           </div>
           <div class="turn-pill" id="turn-1">思考中</div>
         </section>
 
         <section class="player player-right" id="player-3">
-          <div class="avatar avatar-violet">许</div>
+          <div class="avatar avatar-violet" id="avatar-3">许</div>
           <div class="player-copy">
-            <div class="name-line"><strong>许晏</strong></div>
+            <div class="name-line"><strong id="name-3">许晏</strong></div>
             <div class="card-count"><i></i><span id="count-3">27</span> 张</div>
           </div>
           <div class="turn-pill" id="turn-3">思考中</div>
@@ -99,10 +145,10 @@
 
         <section class="player player-you" id="player-0">
           <div class="avatar-wrap">
-            <div class="avatar avatar-red">你</div>
+            <div class="avatar avatar-red" id="avatar-0">你</div>
           </div>
           <div class="player-copy">
-            <div class="name-line"><strong>牌手</strong><span>我方</span></div>
+            <div class="name-line"><strong id="name-0">牌手</strong><span data-i18n="ourTeam">我方</span></div>
             <div class="card-count"><i></i><span id="count-0">27</span> 张</div>
           </div>
         </section>
@@ -110,9 +156,9 @@
         <div class="action-area">
           <p class="selection-tip" id="selection-tip" aria-live="polite">请选择要出的牌</p>
           <div class="action-buttons">
-            <button class="game-button secondary" id="pass-button" type="button" aria-keyshortcuts="Space" title="不出（空格）"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg><span>不出</span></button>
-            <button class="game-button secondary" id="hint-button" type="button" aria-keyshortcuts="H" title="提示（H）"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17h6M10 20h4"/><path d="M8.5 14.5A6 6 0 1 1 15.5 14.5c-.8.6-1.1 1.2-1.1 2.5h-4.8c0-1.3-.3-1.9-1.1-2.5Z"/></svg><span>提示</span></button>
-            <button class="game-button primary" id="play-button" type="button" aria-keyshortcuts="Enter" title="出牌（Enter）"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M7 10l5-5 5 5"/></svg><span>出牌</span></button>
+            <button class="game-button secondary" id="pass-button" type="button" aria-keyshortcuts="Space" title="不出（空格）"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg><span data-i18n="pass">不出</span></button>
+            <button class="game-button secondary" id="hint-button" type="button" aria-keyshortcuts="H" title="提示（H）"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17h6M10 20h4"/><path d="M8.5 14.5A6 6 0 1 1 15.5 14.5c-.8.6-1.1 1.2-1.1 2.5h-4.8c0-1.3-.3-1.9-1.1-2.5Z"/></svg><span data-i18n="hint">提示</span></button>
+            <button class="game-button primary" id="play-button" type="button" aria-keyshortcuts="Enter" title="出牌（Enter）"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M7 10l5-5 5 5"/></svg><span data-i18n="play">出牌</span></button>
           </div>
         </div>
 
@@ -122,7 +168,7 @@
       </section>
 
       <footer class="game-footer">
-        <span><i class="online-dot"></i>单机练习 <small class="version-tag">v0.6.0</small></span>
+        <span><i class="online-dot"></i><span id="game-mode-label" data-i18n="singlePlayer">单机练习</span> <small class="version-tag">v0.7.0</small></span>
         <span id="footer-tip">你的搭档坐在对面</span>
       </footer>
     </main>
@@ -133,14 +179,61 @@
         <button type="button" id="close-rules" aria-label="关闭规则">×</button>
       </div>
       <div class="rules-grid">
-        <article><b>01</b><div><h3>四人两队</h3><p>你与对家组成一队。每人 27 张牌，先出完手牌者获得头游。</p></div></article>
+        <article><b>01</b><div><h3>四人两队</h3><p>你与对家组成一队。每人 27 张牌，先出完者获得头游；若无人压牌，由其仍在场的对家接风。</p></div></article>
         <article><b>02</b><div><h3>同型压制</h3><p>非炸弹牌需张数、牌型一致且点数更大；炸弹可压制普通牌型。</p></div></article>
         <article><b>03</b><div><h3>逢人配</h3><p>红桃级牌可充当除大小王以外的任意牌，单独打出时仍是级牌。</p></div></article>
         <article><b>04</b><div><h3>本版支持</h3><p>单张、对子、三张、三带二、顺子、三连对、钢板、同花顺与炸弹。</p></div></article>
         <article><b>05</b><div><h3>炸弹层级</h3><p>同花顺高于五张炸弹、低于六张炸弹；四王炸为最大牌型。</p></div></article>
         <article><b>06</b><div><h3>快捷操作</h3><p>牌桌空白处可用 Enter 出牌、空格不出、H 获取提示。</p></div></article>
       </div>
+      <p class="rules-note"><strong>练习版说明：</strong>暂不包含进贡、还贡与抗贡，下一局由头游先手。</p>
       <button class="game-button primary modal-confirm" id="confirm-rules" type="button">知道了</button>
+    </dialog>
+
+    <dialog id="settings-dialog" class="modal settings-modal" aria-labelledby="settings-title">
+      <div class="modal-head">
+        <div><span>HANAZAR</span><h2 id="settings-title" data-i18n="settings">游戏设置</h2></div>
+        <button type="button" id="close-settings" aria-label="关闭设置">×</button>
+      </div>
+      <div class="settings-grid">
+        <section class="settings-section"><h3 data-i18n="soundSettings">声音设置</h3>
+          <label class="setting-toggle"><span><b data-i18n="sfx">游戏音效</b><small data-i18n="sfxCopy">出牌、提示与胜负反馈</small></span><input id="setting-sfx" type="checkbox" checked><i></i></label>
+          <label class="range-setting"><span data-i18n="sfxVolume">音效音量</span><input id="setting-sfx-volume" type="range" min="0" max="100" value="100"></label>
+          <label class="setting-toggle"><span><b data-i18n="bgm">背景音乐</b><small data-i18n="bgmCopy">低音量程序化牌桌音乐</small></span><input id="setting-bgm" type="checkbox"><i></i></label>
+          <label class="range-setting"><span data-i18n="bgmVolume">音乐音量</span><input id="setting-bgm-volume" type="range" min="0" max="100" value="70"></label>
+        </section>
+        <section class="settings-section"><h3 data-i18n="displaySettings">显示与语言</h3>
+          <label class="select-setting"><span data-i18n="language">界面语言</span><select id="language-select"><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="ru">Русский</option></select></label>
+          <label class="select-setting"><span data-i18n="motion">动画效果</span><select id="motion-select"><option value="full" data-i18n="motionFull">完整动画</option><option value="reduced" data-i18n="motionReduced">减少动画</option></select></label>
+          <label class="setting-toggle"><span><b data-i18n="announcements">首页公告</b><small data-i18n="announcementsCopy">在主页面显示版本动态</small></span><input id="setting-announcements" type="checkbox" checked><i></i></label>
+        </section>
+        <section class="settings-section about-section"><h3 data-i18n="about">关于</h3><p>Guandan Webgame v0.7.0</p>
+          <div class="about-links"><a href="https://github.com/Hanazar-Games/Guandan-Webgame" target="_blank" rel="noopener">GitHub Repository</a><a href="https://github.com/Hanazar-Games/Guandan-Webgame/issues" target="_blank" rel="noopener">Issues</a><a href="https://github.com/Hanazar-Games/Guandan-Webgame/discussions" target="_blank" rel="noopener">Discussions</a><a href="https://github.com/hzagaming" target="_blank" rel="noopener">HzaGaming</a><a href="https://hanazargames.com/" target="_blank" rel="noopener" data-i18n="officialHome">返回官网</a></div>
+        </section>
+      </div>
+    </dialog>
+
+    <dialog id="tutorial-dialog" class="modal tutorial-modal" aria-labelledby="tutorial-title">
+      <div class="modal-head"><div><span data-i18n="tutorialKicker">五步入门</span><h2 id="tutorial-title" data-i18n="tutorial">新手教程</h2></div><button type="button" id="close-tutorial" aria-label="关闭教程">×</button></div>
+      <div class="tutorial-progress"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="tutorial-slides">
+        <article class="tutorial-slide active"><b>01</b><div class="tutorial-visual teams-visual"><span>你</span><span>队友</span><span>对手</span><span>对手</span></div><h3 data-i18n="tutorial1Title">认清你的队伍</h3><p data-i18n="tutorial1Copy">你与对面玩家是一队。配合队友，比单纯压过每一手牌更重要。</p></article>
+        <article class="tutorial-slide"><b>02</b><div class="tutorial-visual card-visual">♥ 2</div><h3 data-i18n="tutorial2Title">认识逢人配</h3><p data-i18n="tutorial2Copy">红桃级牌可以替代除大小王以外的任意牌，是组合强牌的关键。</p></article>
+        <article class="tutorial-slide"><b>03</b><div class="tutorial-visual combo-visual">7 8 9 10 J</div><h3 data-i18n="tutorial3Title">同型才能压制</h3><p data-i18n="tutorial3Copy">普通牌需要牌型、张数一致且点数更大；炸弹可以打破这一限制。</p></article>
+        <article class="tutorial-slide"><b>04</b><div class="tutorial-visual action-visual">提示 → 选择 → 出牌</div><h3 data-i18n="tutorial4Title">完成一次出牌</h3><p data-i18n="tutorial4Copy">点击手牌进行选择。拿不准时使用提示，没有合适的牌就选择不出。</p></article>
+        <article class="tutorial-slide"><b>05</b><div class="tutorial-visual win-visual">冠</div><h3 data-i18n="tutorial5Title">与队友一起升级</h3><p data-i18n="tutorial5Copy">头游与队友名次决定升级幅度。率先打过 A 即可完成比赛。</p></article>
+      </div>
+      <div class="tutorial-actions"><button class="game-button secondary" id="tutorial-prev" type="button" data-i18n="previous">上一步</button><span id="tutorial-count">1 / 5</span><button class="game-button primary" id="tutorial-next" type="button" data-i18n="next">下一步</button></div>
+    </dialog>
+
+    <dialog id="lan-dialog" class="modal lan-modal" aria-labelledby="lan-title">
+      <div class="modal-head"><div><span>LOCAL NETWORK</span><h2 id="lan-title" data-i18n="lanGame">局域网联机</h2></div><button type="button" id="close-lan" aria-label="关闭联机大厅">×</button></div>
+      <div class="lan-connect" id="lan-connect">
+        <label><span data-i18n="playerName">玩家名称</span><input id="lan-player-name" maxlength="16" value="牌手" autocomplete="nickname"></label>
+        <div class="lan-choice"><button class="game-button primary" id="create-room" type="button" data-i18n="createRoom">创建房间</button><i data-i18n="or">或</i><label><span data-i18n="roomCode">房间码</span><input id="lan-room-code" maxlength="6" placeholder="A1B2C3" autocapitalize="characters"></label><button class="game-button secondary" id="join-room" type="button" data-i18n="joinRoom">加入房间</button></div>
+        <p class="lan-status" id="lan-connect-status" role="status"></p>
+      </div>
+      <div class="lan-lobby view-hidden" id="lan-lobby"><div class="room-code-card"><span data-i18n="roomCode">房间码</span><strong id="current-room-code">------</strong><button id="copy-room-code" type="button" data-i18n="copy">复制</button></div><p class="lan-address" id="lan-address"></p><div class="lan-players" id="lan-players"></div><p class="lan-status" id="lan-status" role="status"></p><button class="game-button primary lan-start" id="start-lan-game" type="button" data-i18n="startGame">开始游戏</button></div>
     </dialog>
 
     <dialog id="restart-dialog" class="modal restart-modal" aria-labelledby="restart-title" aria-describedby="restart-copy">
@@ -164,5 +257,6 @@
 
     <div class="toast" id="toast" role="status" aria-live="assertive"></div>
     <script src="script.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>

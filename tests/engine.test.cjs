@@ -205,6 +205,9 @@ assert.equal(oscillatorStarts - playStarts >= 2, true, "炸弹应有独立的分
 const turnStarts = oscillatorStarts;
 playSfx("turn");
 assert.equal(oscillatorStarts - turnStarts >= 2, true, "轮到玩家时应提供独立的提示音效");
+const dealStarts = oscillatorStarts;
+playSfx("deal");
+assert.equal(oscillatorStarts - dealStarts >= 3, true, "发牌应提供有节奏的独立音效");
 state.music = true;
 startBGM();
 startBGM();
@@ -221,14 +224,17 @@ stopBGM();
 assert.deepEqual(clearedIntervals, [1, 2]);
 state.music = false;
 
-const shortcutEvent = (key, interactive = false) => ({
+const shortcutEvent = (key, interactive = false, modifiers = {}) => ({
   key,
-  target: { closest: () => interactive ? {} : null }
+  target: { closest: () => interactive ? {} : null },
+  ...modifiers
 });
 assert.equal(shortcutAction(shortcutEvent("Enter")), "play");
 assert.equal(shortcutAction(shortcutEvent(" ")), "pass");
 assert.equal(shortcutAction(shortcutEvent("H")), "hint");
 assert.equal(shortcutAction(shortcutEvent("Enter", true)), null, "按钮和弹窗内应保留原生键盘行为");
+assert.equal(shortcutAction(shortcutEvent("h", false, { metaKey: true })), null, "系统组合键不得误触牌桌快捷操作");
+assert.equal(shortcutAction(shortcutEvent("H", false, { repeat: true })), null, "长按按键不得重复触发提示");
 assert.equal(shortcutAction(shortcutEvent("Escape")), null);
 
 state.resultTimer = 123;
