@@ -915,26 +915,18 @@
     if (typeof settings.bgmVolume === "number") bgmVolume = Math.max(0, Math.min(1, settings.bgmVolume));
     if (typeof settings.sfxPitch === "number") sfxPitch = Math.max(.5, Math.min(1.8, settings.sfxPitch));
     if (["soft", "classic", "crisp"].includes(settings.sfxProfile)) sfxProfile = settings.sfxProfile;
-    if (["minimal", "balanced", "rich"].includes(settings.bgmTexture) && settings.bgmTexture !== bgmTexture) {
-      const wasPlaying = Boolean(bgmTimer);
-      if (wasPlaying) stopBGM();
-      bgmTexture = settings.bgmTexture;
-      if (wasPlaying && state.music) startBGM();
-    }
-    if (typeof settings.bgmTempo === "number") {
-      const nextTempo = Math.max(.5, Math.min(2, settings.bgmTempo));
-      if (nextTempo !== bgmTempo && bgmTimer) {
-        stopBGM();
-        bgmTempo = nextTempo;
-        if (state.music) startBGM();
-      } else bgmTempo = nextTempo;
-    }
+    const nextTexture = ["minimal", "balanced", "rich"].includes(settings.bgmTexture) ? settings.bgmTexture : bgmTexture;
+    const nextTempo = typeof settings.bgmTempo === "number" ? Math.max(.5, Math.min(2, settings.bgmTempo)) : bgmTempo;
+    const restartBGM = Boolean(bgmTimer) && (nextTexture !== bgmTexture || nextTempo !== bgmTempo);
+    if (restartBGM) stopBGM();
+    bgmTexture = nextTexture;
+    bgmTempo = nextTempo;
     if (typeof settings.sound === "boolean") state.sound = settings.sound;
     if (typeof settings.music === "boolean") {
       state.music = settings.music;
       if (state.music && !startBGM()) state.music = false;
       if (!state.music) stopBGM();
-    }
+    } else if (restartBGM && state.music) startBGM();
     if (el["sound-button"]) syncAudioButtons();
   }
 
