@@ -5,15 +5,18 @@ const vm = require("node:vm");
 let source = fs.readFileSync(require.resolve("../script.js"), "utf8");
 source = source.replace(
   "  initElements();",
-  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM };\n  return;\n  initElements();"
+  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM, setAudio, setPreferences, getTuning: () => ({ sfxPitch, bgmTempo, aiDelay, autoScrollHints, confirmRestart, haptics }) };\n  return;\n  initElements();"
 );
 
 const clearedTimers = [];
 const clearedIntervals = [];
 const intervals = [];
+const intervalDelays = [];
 let audioContexts = 0;
 let oscillatorStops = 0;
 let oscillatorStarts = 0;
+const oscillatorFrequencies = [];
+const vibrations = [];
 const audioNode = () => ({ connect() {}, disconnect() {} });
 class FakeAudioContext {
   constructor() {
@@ -23,10 +26,12 @@ class FakeAudioContext {
     this.state = "running";
   }
   createOscillator() {
-    return {
+    const oscillator = {
       ...audioNode(), frequency: { value: 0 }, type: "sine", start() { oscillatorStarts++; },
       stop() { oscillatorStops++; }, addEventListener() {}
     };
+    oscillator.start = () => { oscillatorStarts++; oscillatorFrequencies.push(oscillator.frequency.value); };
+    return oscillator;
   }
   createGain() {
     return {
@@ -38,10 +43,10 @@ class FakeAudioContext {
 }
 const context = {
   console, Math, Set, Map,
-  window: { AudioContext: FakeAudioContext },
+  window: { AudioContext: FakeAudioContext, navigator: { vibrate: pattern => vibrations.push(pattern) } },
   document: { hidden: false },
   clearTimeout: timer => clearedTimers.push(timer),
-  setInterval: callback => { intervals.push(callback); return intervals.length; },
+  setInterval: (callback, delay) => { intervals.push(callback); intervalDelays.push(delay); return intervals.length; },
   clearInterval: timer => clearedIntervals.push(timer)
 };
 vm.createContext(context);
@@ -49,7 +54,8 @@ vm.runInContext(source, context);
 
 const {
   createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel,
-  cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM
+  cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM,
+  setAudio, setPreferences, getTuning
 } = context.__guandanTest;
 const card = (rank, suit = "♠", copy = 0) => ({ id: `${copy}-${suit}-${rank}`, rank, suit, copy, joker: false });
 const joker = (big, copy = 0) => ({ id: `${copy}-${big ? "BJ" : "SJ"}`, rank: big ? "大王" : "小王", suit: "", copy, joker: true, big });
@@ -223,6 +229,30 @@ assert.equal(intervals.length, 2, "背景音乐恢复后应重新建立调度器
 stopBGM();
 assert.deepEqual(clearedIntervals, [1, 2]);
 state.music = false;
+
+const pitchStart = oscillatorFrequencies.length;
+setAudio({ sfxPitch: 1.4 });
+playSfx("select");
+assert.equal(oscillatorFrequencies[pitchStart], 420, "音效音高参数应实时作用于所有 SFX 频率");
+setAudio({ bgmTempo: 1.6 });
+state.music = true;
+startBGM();
+assert.equal(intervalDelays.at(-1), 1050 / 1.6, "音乐速度参数应实时作用于 BGM 调度间隔");
+const tempoIntervals = intervals.length;
+setAudio({ bgmTempo: .8 });
+assert.equal(intervals.length, tempoIntervals + 1, "播放中调整音乐速度应只重建一次调度器");
+assert.equal(intervalDelays.at(-1), 1050 / .8);
+stopBGM();
+state.music = false;
+
+setPreferences({ aiDelay: 200, autoScrollHints: false, confirmRestart: false, haptics: true });
+assert.deepEqual(JSON.parse(JSON.stringify(getTuning())), { sfxPitch: 1.4, bgmTempo: .8, aiDelay: 200, autoScrollHints: false, confirmRestart: false, haptics: true });
+state.sound = false;
+playSfx("bomb");
+assert.deepEqual(vibrations, [45], "震动反馈应能在关闭 SFX 时独立工作");
+state.sound = true;
+setPreferences({ aiDelay: 99999 });
+assert.equal(getTuning().aiDelay, 2200, "AI 思考时间应限制在设置范围内");
 
 const shortcutEvent = (key, interactive = false, modifiers = {}) => ({
   key,

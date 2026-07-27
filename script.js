@@ -39,6 +39,12 @@
 
   let sfxVolume = 1;
   let bgmVolume = .7;
+  let sfxPitch = 1;
+  let bgmTempo = 1;
+  let aiDelay = 900;
+  let autoScrollHints = true;
+  let confirmRestart = true;
+  let haptics = false;
 
   const el = {};
   const byId = id => document.getElementById(id);
@@ -231,9 +237,10 @@
   }
 
   function revealSelection() {
+    if (!autoScrollHints) return;
     const card = el["player-hand"].querySelector(".selected");
     if (!card) return;
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || document.body?.classList?.contains("reduced-motion");
     card.scrollIntoView?.({ behavior: reducedMotion ? "auto" : "smooth", block: "nearest", inline: "center" });
   }
 
@@ -535,7 +542,7 @@
     clearTimeout(state.timer);
     state.timer = null;
     const humanSeat = state.lan ? state.lan.humanSeats.includes(state.currentPlayer) : state.currentPlayer === state.localPlayer;
-    if (state.locked || humanSeat || (state.lan && !state.lan.host) || document.hidden || el["rules-dialog"].open || el["restart-dialog"].open) return;
+    if (state.locked || humanSeat || (state.lan && !state.lan.host) || document.hidden || el["rules-dialog"].open || el["restart-dialog"].open || byId("settings-dialog")?.open) return;
     const player = state.currentPlayer;
     state.timer = setTimeout(() => {
       if (state.locked || state.currentPlayer !== player) return;
@@ -543,7 +550,7 @@
       const teammateLeading = state.lastPlayer !== null && state.lastPlayer % 2 === player % 2;
       const move = findAIMove(state.hands[player], state.currentPlay?.combo || null, teammateLeading);
       if (move) commitPlay(player, move.cards, move.combo); else commitPass(player);
-    }, 620 + Math.random() * 520);
+    }, aiDelay);
   }
 
   function pauseAI() {
@@ -737,6 +744,7 @@
   }
 
   function playSfx(kind, detail = 0) {
+    if (haptics && ["bomb", "win"].includes(kind)) window.navigator?.vibrate?.(kind === "bomb" ? 45 : [35, 35, 70]);
     if (!state.sound) return;
     const voices = {
       select: [[300 + Math.min(detail, 8) * 18, .035, .022, "sine", 0]],
@@ -751,15 +759,15 @@
       finish: [[220, .18, .025, "triangle", 0], [196, .24, .02, "triangle", .12]],
       win: [[392, .12, .026, "triangle", 0], [493.88, .16, .024, "triangle", .08], [587.33, .28, .022, "triangle", .17]]
     }[kind] || [];
-    voices.forEach(([frequency, duration, volume, type, delay]) => playVoice(frequency, duration, volume * sfxVolume, type, null, delay));
+    voices.forEach(([frequency, duration, volume, type, delay]) => playVoice(frequency * sfxPitch, duration, volume * sfxVolume, type, null, delay));
   }
 
   function playBGMNote() {
     if (!state.music || document.hidden) return false;
     const step = bgmStep++ % BGM_MELODY.length;
     const note = BGM_MELODY[step];
-    const played = note ? playVoice(note, .85, .006 * bgmVolume, "triangle", bgmVoices) : false;
-    const bass = step % 4 === 0 && playVoice(BGM_BASS[step / 4], 2.6, .003 * bgmVolume, "sine", bgmVoices);
+    const played = note ? playVoice(note, .85 / bgmTempo, .006 * bgmVolume, "triangle", bgmVoices) : false;
+    const bass = step % 4 === 0 && playVoice(BGM_BASS[step / 4], 2.6 / bgmTempo, .003 * bgmVolume, "sine", bgmVoices);
     return (!note && step % 4 !== 0) || played || bass;
   }
 
@@ -767,7 +775,7 @@
     if (!state.music || document.hidden) return false;
     if (bgmTimer) return true;
     if (!getAudioContext() || !playBGMNote()) return false;
-    bgmTimer = setInterval(playBGMNote, 1050);
+    bgmTimer = setInterval(playBGMNote, 1050 / bgmTempo);
     return true;
   }
 
@@ -797,7 +805,7 @@
       button.setAttribute("aria-label", action);
       button.setAttribute("title", action);
     });
-    window.dispatchEvent?.(new CustomEvent("guandan:audio", { detail: { sound: state.sound, music: state.music, sfxVolume, bgmVolume } }));
+    window.dispatchEvent?.(new CustomEvent("guandan:audio", { detail: { sound: state.sound, music: state.music, sfxVolume, bgmVolume, sfxPitch, bgmTempo } }));
   }
 
   function lanSnapshot() {
@@ -887,13 +895,29 @@
   function setAudio(settings) {
     if (typeof settings.sfxVolume === "number") sfxVolume = Math.max(0, Math.min(1, settings.sfxVolume));
     if (typeof settings.bgmVolume === "number") bgmVolume = Math.max(0, Math.min(1, settings.bgmVolume));
+    if (typeof settings.sfxPitch === "number") sfxPitch = Math.max(.7, Math.min(1.4, settings.sfxPitch));
+    if (typeof settings.bgmTempo === "number") {
+      const nextTempo = Math.max(.6, Math.min(1.6, settings.bgmTempo));
+      if (nextTempo !== bgmTempo && bgmTimer) {
+        stopBGM();
+        bgmTempo = nextTempo;
+        if (state.music) startBGM();
+      } else bgmTempo = nextTempo;
+    }
     if (typeof settings.sound === "boolean") state.sound = settings.sound;
     if (typeof settings.music === "boolean") {
       state.music = settings.music;
       if (state.music && !startBGM()) state.music = false;
       if (!state.music) stopBGM();
     }
-    syncAudioButtons();
+    if (el["sound-button"]) syncAudioButtons();
+  }
+
+  function setPreferences(settings) {
+    if (typeof settings.aiDelay === "number") aiDelay = Math.max(200, Math.min(2200, settings.aiDelay));
+    if (typeof settings.autoScrollHints === "boolean") autoScrollHints = settings.autoScrollHints;
+    if (typeof settings.confirmRestart === "boolean") confirmRestart = settings.confirmRestart;
+    if (typeof settings.haptics === "boolean") haptics = settings.haptics;
   }
 
   window.GuandanGame = {
@@ -910,7 +934,9 @@
     startLanGame() { if (state.lan?.host) startGame(true); },
     applyLanSnapshot,
     handleLanAction,
-    setAudio
+    setAudio,
+    setPreferences,
+    resume: scheduleAI
   };
 
   function shortcutAction(event) {
@@ -927,7 +953,7 @@
     el["play-button"].addEventListener("click", humanPlay);
     el["pass-button"].addEventListener("click", humanPass);
     el["hint-button"].addEventListener("click", hint);
-    el["new-game-button"].addEventListener("click", () => openPausedDialog(el["restart-dialog"]));
+    el["new-game-button"].addEventListener("click", () => confirmRestart ? openPausedDialog(el["restart-dialog"]) : startGame(false));
     el["cancel-restart"].addEventListener("click", () => closePausedDialog(el["restart-dialog"]));
     el["confirm-restart"].addEventListener("click", () => startGame(false));
     el["again-button"].addEventListener("click", () => startGame(el["again-button"].dataset.resetMatch === "true"));

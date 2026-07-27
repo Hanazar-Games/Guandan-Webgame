@@ -83,6 +83,20 @@ vm.runInContext(source, context);
 assert.equal(context.__guandanState.hands.map(hand => hand.length).join(","), "27,27,27,27");
 assert.match(html, /id="home-screen"[\s\S]*id="single-player-button"[\s\S]*id="lan-button"/, "主页面应提供单机与局域网入口");
 assert.match(html, /id="settings-dialog"[\s\S]*id="setting-sfx"[\s\S]*id="setting-bgm"[\s\S]*id="language-select"/, "设置中心应包含音效、音乐与语言设置");
+for (const [id, min, max] of [
+  ["setting-sfx-volume", "0", "100"], ["setting-sfx-pitch", "70", "140"],
+  ["setting-bgm-volume", "0", "100"], ["setting-bgm-tempo", "60", "160"],
+  ["setting-motion-speed", "50", "200"], ["setting-card-scale", "70", "140"],
+  ["setting-table-brightness", "60", "140"], ["setting-ai-delay", "200", "2200"]
+]) {
+  assert.match(html, new RegExp(`id="${id}"[^>]*min="${min}"[^>]*max="${max}"`), `${id} 应提供明确且宽泛的可调范围`);
+}
+for (const id of ["setting-auto-scroll", "setting-confirm-restart", "setting-haptics", "setting-announcements", "reset-settings"]) {
+  assert.match(html, new RegExp(`id="${id}"`), `设置中心缺少 ${id}`);
+}
+assert.equal((html.match(/class="range-value"/g) || []).length, 8, "每个范围参数都应显示当前数值");
+const settingsMarkup = html.match(/<dialog id="settings-dialog"[\s\S]*?<\/dialog>/)[0];
+assert.equal((settingsMarkup.match(/type="range"/g) || []).length + (settingsMarkup.match(/type="checkbox"/g) || []).length + (settingsMarkup.match(/<select /g) || []).length, 16, "设置中心应提供 16 项可调参数");
 assert.equal((html.match(/<option value="(?:zh-CN|zh-TW|en|ja|ko|es|fr|de|pt|ru)"/g) || []).length, 10, "语言设置应提供 10 种语言");
 assert.equal((html.match(/class="tutorial-slide(?: active)?"/g) || []).length, 5, "新手教程应包含五个步骤");
 assert.match(html, /id="lan-dialog"[\s\S]*id="create-room"[\s\S]*id="join-room"[\s\S]*id="start-lan-game"/, "局域网大厅应具备建房、加入和开始入口");
@@ -161,8 +175,19 @@ elements.get("confirm-restart").listeners.get("click")[0]();
 assert.equal(context.__guandanState.history.length, 0, "确认重开后才应重新发牌");
 assert.equal(elements.get("toast").classList.contains("show"), false, "重开后不应残留上一局 Toast");
 
+context.window.GuandanGame.setPreferences({ confirmRestart: false });
+context.__guandanState.history.push({ action: "test" });
+elements.get("new-game-button").listeners.get("click")[0]();
+assert.equal(restartDialog.open, false, "关闭重开确认后应直接开始新局");
+assert.equal(context.__guandanState.history.length, 0, "关闭重开确认后仍应完整重置本局");
+context.window.GuandanGame.setPreferences({ confirmRestart: true });
+
 elements.get("hint-button").listeners.get("click")[0]();
 assert.equal(selectionReveals, 1, "提示选牌后应将结果滚动到可视区域");
+context.window.GuandanGame.setPreferences({ autoScrollHints: false });
+elements.get("hint-button").listeners.get("click")[0]();
+assert.equal(selectionReveals, 1, "关闭提示自动定位后不应强制滚动手牌");
+context.window.GuandanGame.setPreferences({ autoScrollHints: true });
 
 context.__guandanState.currentPlay = { cards: [], combo: { type: "jokerbomb", value: 99, size: 4, bombPower: 9999 } };
 context.__guandanState.lastPlayer = 1;
@@ -245,6 +270,9 @@ assert.match(css, /@keyframes hero-enter/, "主页面应具备入场动画");
 assert.match(css, /@keyframes hand-deal/, "发牌过程应具备错峰动画");
 assert.match(css, /body\.reduced-motion/, "设置应允许主动减少动画");
 assert.match(css, /\.setting-toggle input:focus-visible \+ i/, "自定义设置开关应显示键盘焦点");
+assert.match(css, /--card-size-adjust/, "牌面尺寸应通过 CSS 变量即时调整");
+assert.match(css, /--table-tint/, "牌桌亮度应只通过背景色层即时调整");
+assert.match(css, /--motion-deal/, "发牌动画速度应通过 CSS 变量即时调整");
 assert.match(css, /\.tutorial-modal\s*\{[^}]*overflow:\s*auto;/s, "矮屏教程弹窗应允许滚动到底部操作");
 assert.match(css, /@media \(max-height:\s*600px\) and \(min-width:761px\)[\s\S]*?\.home-screen\s*\{[^}]*overflow:\s*auto;/s, "短横屏主页面不应裁掉入口");
 assert.match(css, /@media \(max-height:\s*740px\) and \(min-width:761px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*23%;[^}]*transform:\s*translateX\(-50%\);/s, "短屏中央状态不得受内容高度影响并遮挡顶部牌背");
