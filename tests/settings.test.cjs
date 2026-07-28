@@ -34,12 +34,15 @@ class Element {
     this.value = "";
     this.checked = false;
     this.textContent = "";
+    this.hidden = false;
+    this.focused = false;
   }
   addEventListener(type, listener) {
     if (!this.listeners.has(type)) this.listeners.set(type, []);
     this.listeners.get(type).push(listener);
   }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
+  focus() { this.focused = true; }
   showModal() { this.open = true; }
   close() { this.open = false; }
 }
@@ -99,6 +102,11 @@ fire("settings-tab-display", "click");
 assert.equal(elements.get("settings-tab-display").attributes.get("aria-selected"), "true");
 assert.equal(elements.get("settings-panel-display").classList.contains("active"), true);
 assert.equal(elements.get("settings-panel-sound").classList.contains("active"), false);
+assert.equal(elements.get("settings-panel-sound").hidden, true);
+assert.equal(elements.get("settings-tab-sound").attributes.get("tabindex"), "-1");
+elements.get("settings-tab-display").listeners.get("keydown")[0]({ key: "ArrowRight", preventDefault() {} });
+assert.equal(elements.get("settings-tab-gameplay").attributes.get("aria-selected"), "true", "设置分类应支持方向键切换");
+assert.equal(elements.get("settings-tab-gameplay").focused, true);
 
 elements.get("setting-sfx-pitch").value = "140";
 fire("setting-sfx-pitch", "input");
@@ -129,6 +137,9 @@ assert.equal(documentElement.style.getPropertyValue("--hand-spacing"), ".45");
 elements.get("setting-selection-lift").value = "180";
 fire("setting-selection-lift", "input");
 assert.equal(documentElement.style.getPropertyValue("--selection-lift"), "1.8");
+elements.get("setting-card-scale").value = "150";
+fire("setting-card-scale", "input");
+assert.equal(documentElement.style.getPropertyValue("--hand-top-room"), "45.3px", "最大牌面和抬升叠加时应预留顶部空间");
 elements.get("setting-toast-duration").value = "5000";
 fire("setting-toast-duration", "input");
 assert.equal(preferenceCalls.at(-1).toastDuration, 5000);
@@ -146,6 +157,7 @@ assert.equal(audioCalls.at(-1).bgmTexture, "rich");
 elements.get("setting-announcements").checked = false;
 fire("setting-announcements", "change");
 assert.equal(announcement.classList.contains("view-hidden"), true);
+assert.equal(body.classList.contains("announcement-hidden"), true, "隐藏公告后首页不应保留空白栏");
 
 elements.get("game-screen").classList.remove("view-hidden");
 fire("game-settings-button", "click");

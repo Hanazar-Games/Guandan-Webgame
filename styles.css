@@ -15,6 +15,7 @@
   --hand-overlap: -24px;
   --selection-lift: 1;
   --selection-lift-offset: -20px;
+  --hand-top-room: 8px;
   --motion-hero: .7s;
   --motion-deal: .36s;
   --motion-play: .22s;
@@ -53,6 +54,7 @@ body {
 .home-nav-actions { display:flex; align-items:center; gap:10px; }
 .ghost-link { padding:8px 12px; color:var(--muted); border:1px solid rgba(255,255,255,.12); border-radius:8px; font-size:11px; text-decoration:none; transition:.18s ease; }
 .hero-panel { width:min(1180px,calc(100vw - 48px)); margin:auto; display:grid; grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr); align-items:center; gap:clamp(42px,7vw,100px); padding:48px 0; }
+.announcement-hidden .hero-panel { grid-template-columns:minmax(0,800px); justify-content:center; }
 .hero-copy { animation:hero-enter var(--motion-hero) cubic-bezier(.2,.8,.2,1) both; }
 .hero-kicker { margin:0 0 15px; color:var(--gold); font-size:11px; font-weight:700; letter-spacing:5px; }
 .hero-copy h2 { max-width:700px; margin:0; font-family:"Songti SC","Noto Serif SC",serif; font-size:clamp(42px,6vw,78px); font-weight:800; line-height:1.04; letter-spacing:2px; }
@@ -227,8 +229,8 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .game-button:disabled { opacity:.35; cursor:not-allowed; }
 .game-button:active:not(:disabled) { transform:translateY(1px); filter:brightness(.96); }
 
-.hand-scroll { position:absolute; left:18%; right:2%; bottom:15px; height:117px; z-index:7; overflow-x:auto; overflow-y:visible; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:rgba(216,182,106,.45) transparent; }
-.hand { min-width:max-content; height:106px; display:flex; align-items:flex-end; padding:14px 34px 0 16px; }
+.hand-scroll { position:absolute; left:18%; right:2%; bottom:15px; height:calc(117px + var(--hand-top-room)); z-index:7; overflow-x:auto; overflow-y:visible; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:rgba(216,182,106,.45) transparent; }
+.hand { min-width:max-content; height:calc(106px + var(--hand-top-room)); display:flex; align-items:flex-end; padding:14px 34px 0 16px; }
 .card.deal-card { animation:hand-deal var(--motion-deal) cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--card-index) * 16ms); }
 .card {
   position:relative; flex:0 0 var(--card-w); width:var(--card-w); height:var(--card-h); margin-left:var(--hand-overlap);
@@ -285,7 +287,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .settings-modal { width:min(1040px,calc(100vw - 30px)); }
 .settings-modal::backdrop { background:rgba(0,8,7,.55); backdrop-filter:blur(2px); }
 .settings-tabs { position:sticky; top:0; z-index:3; display:grid; grid-template-columns:repeat(4,1fr); gap:7px; padding:12px 26px; background:rgba(5,34,29,.96); border-bottom:1px solid rgba(255,255,255,.08); backdrop-filter:blur(12px); }
-.settings-tabs button { min-height:40px; padding:7px 10px; color:var(--muted); border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.035); cursor:pointer; font-size:11px; }
+.settings-tabs button { min-width:0; min-height:40px; padding:7px 10px; overflow-wrap:anywhere; color:var(--muted); border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.035); cursor:pointer; font-size:11px; }
 .settings-tabs button.active { color:var(--gold-bright); border-color:rgba(216,182,106,.45); background:rgba(216,182,106,.12); }
 .settings-tabs button:focus-visible { outline:3px solid var(--gold-bright); outline-offset:2px; }
 .settings-grid { padding:18px 26px 24px; }
@@ -455,7 +457,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .opponent-top { top:75px; }
   .trick-zone { top:23%; transform:translateX(-50%); }
   .action-area { bottom:128px; }
-  .hand-scroll { height:105px; }
+  .hand-scroll { height:calc(105px + var(--hand-top-room)); }
   .player-you { bottom:72px; }
 }
 
@@ -474,8 +476,8 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .action-area { bottom:103px; }
   .selection-tip { margin-bottom:4px; }
   .player-you { bottom:84px; }
-  .hand-scroll { bottom:4px; height:94px; }
-  .hand { height:86px; padding-top:10px; }
+  .hand-scroll { bottom:4px; height:calc(94px + var(--hand-top-room)); }
+  .hand { height:calc(86px + var(--hand-top-room)); padding-top:10px; }
 }
 
 @media (max-height:500px) and (min-width:761px) {
@@ -500,8 +502,8 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .selection-tip { margin-bottom:4px; }
   .player-you { left:20px; bottom:22px; }
   .player-you .player-copy { display:none; }
-  .hand-scroll { right:40%; bottom:4px; left:9%; height:92px; }
-  .hand { height:85px; padding-top:10px; }
+  .hand-scroll { right:40%; bottom:4px; left:9%; height:calc(92px + var(--hand-top-room)); }
+  .hand { height:calc(85px + var(--hand-top-room)); padding-top:10px; }
 }
 
 @media (prefers-reduced-motion:reduce) {

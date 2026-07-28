@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#071b18" />
     <meta name="description" content="四人掼蛋单机与局域网对局" />
-    <title>掼蛋 · Hanazar Games v0.9</title>
+    <title>掼蛋 · Hanazar Games v0.9.1</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -41,15 +41,15 @@
         </div>
 
         <aside class="announcement-card">
-          <div class="announcement-head"><span data-i18n="announcement">最新公告</span><time>2026.07.27</time></div>
-          <div class="announcement-icon">09</div>
-          <h3 data-i18n="announcementTitle">个性牌桌与体验升级</h3>
-          <p data-i18n="announcementCopy">新增 24 项即时设置，提供更宽泛的音画与交互自定义范围。</p>
+          <div class="announcement-head"><span data-i18n="announcement">最新公告</span><time>2026.07.28</time></div>
+          <div class="announcement-icon">9.1</div>
+          <h3 data-i18n="announcementTitle">规则与体验深度修复</h3>
+          <p data-i18n="announcementCopy">修正双下结算与 AI 炸弹选择，完善设置极值布局、公告重排和键盘操作。</p>
           <div class="announcement-tags"><span>CUSTOM</span><span>UI/UX</span><span>AUDIO</span></div>
         </aside>
       </section>
 
-      <footer class="home-footer"><span>v0.9.0 · Hanazar Games</span><span class="server-ready"><i></i><span data-i18n="ready">准备就绪</span></span></footer>
+      <footer class="home-footer"><span>v0.9.1 · Hanazar Games</span><span class="server-ready"><i></i><span data-i18n="ready">准备就绪</span></span></footer>
     </main>
 
     <main class="game-shell view-hidden" id="game-screen">
@@ -171,7 +171,7 @@
       </section>
 
       <footer class="game-footer">
-        <span><i class="online-dot"></i><span id="game-mode-label" data-i18n="singlePlayer">单机练习</span> <small class="version-tag">v0.9.0</small></span>
+        <span><i class="online-dot"></i><span id="game-mode-label" data-i18n="singlePlayer">单机练习</span> <small class="version-tag">v0.9.1</small></span>
         <span id="footer-tip">你的搭档坐在对面</span>
       </footer>
     </main>
@@ -182,7 +182,7 @@
         <button type="button" id="close-rules" aria-label="关闭规则">×</button>
       </div>
       <div class="rules-grid">
-        <article><b>01</b><div><h3>四人两队</h3><p>你与对家组成一队。每人 27 张牌，先出完者获得头游；若无人压牌，由其仍在场的对家接风。</p></div></article>
+        <article><b>01</b><div><h3>四人两队</h3><p>你与对家组成一队。每人 27 张牌；同队包揽头游、二游时立即按双下结算，若无人压牌则由仍在场的对家接风。</p></div></article>
         <article><b>02</b><div><h3>同型压制</h3><p>非炸弹牌需张数、牌型一致且点数更大；炸弹可压制普通牌型。</p></div></article>
         <article><b>03</b><div><h3>逢人配</h3><p>红桃级牌可充当除大小王以外的任意牌，单独打出时仍是级牌。</p></div></article>
         <article><b>04</b><div><h3>本版支持</h3><p>单张、对子、三张、三带二、顺子、三连对、钢板、同花顺与炸弹。</p></div></article>
@@ -200,9 +200,9 @@
       </div>
       <div class="settings-tabs" role="tablist" aria-label="设置分类">
         <button id="settings-tab-sound" class="active" type="button" role="tab" aria-selected="true" aria-controls="settings-panel-sound" data-settings-tab="sound" data-i18n="soundSettings">声音设置</button>
-        <button id="settings-tab-display" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-display" data-settings-tab="display" data-i18n="displaySettings">显示与语言</button>
-        <button id="settings-tab-gameplay" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-gameplay" data-settings-tab="gameplay" data-i18n="gameplaySettings">对局与交互</button>
-        <button id="settings-tab-about" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-about" data-settings-tab="about" data-i18n="about">关于</button>
+        <button id="settings-tab-display" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-display" tabindex="-1" data-settings-tab="display" data-i18n="displaySettings">显示与语言</button>
+        <button id="settings-tab-gameplay" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-gameplay" tabindex="-1" data-settings-tab="gameplay" data-i18n="gameplaySettings">对局与交互</button>
+        <button id="settings-tab-about" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-about" tabindex="-1" data-settings-tab="about" data-i18n="about">关于</button>
       </div>
       <div class="settings-grid">
         <section id="settings-panel-sound" class="settings-section active" role="tabpanel" aria-labelledby="settings-tab-sound" data-settings-panel="sound"><h3 data-i18n="soundSettings">声音设置</h3>
@@ -215,7 +215,7 @@
           <label class="range-setting"><span><b data-i18n="bgmTempo">音乐速度</b><output class="range-value" for="setting-bgm-tempo">100%</output></span><input id="setting-bgm-tempo" type="range" min="50" max="200" value="100"></label>
           <label class="select-setting"><span data-i18n="bgmTexture">音乐层次</span><select id="setting-bgm-texture"><option value="minimal" data-i18n="textureMinimal">轻简</option><option value="balanced" data-i18n="textureBalanced" selected>均衡</option><option value="rich" data-i18n="textureRich">丰富</option></select></label>
         </section>
-        <section id="settings-panel-display" class="settings-section" role="tabpanel" aria-labelledby="settings-tab-display" data-settings-panel="display"><h3 data-i18n="displaySettings">显示与语言</h3>
+        <section id="settings-panel-display" class="settings-section" role="tabpanel" aria-labelledby="settings-tab-display" data-settings-panel="display" hidden><h3 data-i18n="displaySettings">显示与语言</h3>
           <label class="select-setting"><span data-i18n="language">界面语言</span><select id="language-select"><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="ru">Русский</option></select></label>
           <label class="select-setting"><span data-i18n="motion">动画效果</span><select id="motion-select"><option value="full" data-i18n="motionFull">完整动画</option><option value="reduced" data-i18n="motionReduced">减少动画</option></select></label>
           <label class="range-setting"><span><b data-i18n="motionSpeed">动画速度</b><output class="range-value" for="setting-motion-speed">100%</output></span><input id="setting-motion-speed" type="range" min="25" max="250" value="100"></label>
@@ -225,7 +225,7 @@
           <label class="range-setting"><span><b data-i18n="saturation">牌桌饱和度</b><output class="range-value" for="setting-saturation">100%</output></span><input id="setting-saturation" type="range" min="40" max="160" value="100"></label>
           <label class="setting-toggle"><span><b data-i18n="announcements">首页公告</b><small data-i18n="announcementsCopy">在主页面显示版本动态</small></span><input id="setting-announcements" type="checkbox" checked><i></i></label>
         </section>
-        <section id="settings-panel-gameplay" class="settings-section gameplay-section" role="tabpanel" aria-labelledby="settings-tab-gameplay" data-settings-panel="gameplay"><h3 data-i18n="gameplaySettings">对局与交互</h3>
+        <section id="settings-panel-gameplay" class="settings-section gameplay-section" role="tabpanel" aria-labelledby="settings-tab-gameplay" data-settings-panel="gameplay" hidden><h3 data-i18n="gameplaySettings">对局与交互</h3>
           <label class="range-setting"><span><b data-i18n="handSpacing">手牌重叠</b><output class="range-value" for="setting-hand-spacing">61%</output></span><input id="setting-hand-spacing" type="range" min="45" max="100" value="61"></label>
           <label class="range-setting"><span><b data-i18n="selectionLift">选牌抬升</b><output class="range-value" for="setting-selection-lift">100%</output></span><input id="setting-selection-lift" type="range" min="50" max="180" value="100"></label>
           <label class="range-setting"><span><b data-i18n="aiDelay">AI 思考时间</b><output class="range-value" for="setting-ai-delay">900ms</output></span><input id="setting-ai-delay" type="range" min="100" max="3000" step="100" value="900"></label>
@@ -235,7 +235,7 @@
           <label class="setting-toggle"><span><b data-i18n="haptics">震动反馈</b><small data-i18n="hapticsCopy">支持设备在炸弹与获胜时震动</small></span><input id="setting-haptics" type="checkbox"><i></i></label>
           <label class="range-setting"><span><b data-i18n="hapticStrength">震动强度</b><output class="range-value" for="setting-haptic-strength">100%</output></span><input id="setting-haptic-strength" type="range" min="25" max="200" step="25" value="100"></label>
         </section>
-        <section id="settings-panel-about" class="settings-section about-section" role="tabpanel" aria-labelledby="settings-tab-about" data-settings-panel="about"><h3 data-i18n="about">关于</h3><p>Guandan Webgame v0.9.0</p>
+        <section id="settings-panel-about" class="settings-section about-section" role="tabpanel" aria-labelledby="settings-tab-about" data-settings-panel="about" hidden><h3 data-i18n="about">关于</h3><p>Guandan Webgame v0.9.1</p>
           <div class="about-links"><a href="https://github.com/Hanazar-Games/Guandan-Webgame" target="_blank" rel="noopener">GitHub Repository</a><a href="https://github.com/Hanazar-Games/Guandan-Webgame/issues" target="_blank" rel="noopener">Issues</a><a href="https://github.com/Hanazar-Games/Guandan-Webgame/discussions" target="_blank" rel="noopener">Discussions</a><a href="https://github.com/hzagaming" target="_blank" rel="noopener">HzaGaming</a><a href="https://hanazargames.com/" target="_blank" rel="noopener" data-i18n="officialHome">返回官网</a></div>
         </section>
       </div>
@@ -284,7 +284,7 @@
       <button class="game-button primary modal-confirm" id="again-button" type="button">再来一局</button>
     </dialog>
 
-    <div class="toast" id="toast" role="status" aria-live="assertive"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="script.js"></script>
     <script src="app.js"></script>
   </body>

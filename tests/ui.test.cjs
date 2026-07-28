@@ -104,6 +104,8 @@ for (const name of ["sound", "display", "gameplay", "about"]) {
   assert.match(settingsMarkup, new RegExp(`id="settings-tab-${name}"[^>]*data-settings-tab="${name}"`), `设置中心缺少 ${name} 分类标签`);
   assert.match(settingsMarkup, new RegExp(`id="settings-panel-${name}"[^>]*data-settings-panel="${name}"`), `设置中心缺少 ${name} 分类面板`);
 }
+assert.match(settingsMarkup, /id="settings-tab-display"[^>]*tabindex="-1"/, "非活动设置标签不应重复进入 Tab 顺序");
+assert.match(settingsMarkup, /id="settings-panel-display"[^>]*hidden/, "非活动设置面板应从可访问树隐藏");
 assert.equal((html.match(/<option value="(?:zh-CN|zh-TW|en|ja|ko|es|fr|de|pt|ru)"/g) || []).length, 10, "语言设置应提供 10 种语言");
 assert.equal((html.match(/class="tutorial-slide(?: active)?"/g) || []).length, 5, "新手教程应包含五个步骤");
 assert.match(html, /id="lan-dialog"[\s\S]*id="create-room"[\s\S]*id="join-room"[\s\S]*id="start-lan-game"/, "局域网大厅应具备建房、加入和开始入口");
@@ -281,6 +283,9 @@ assert.match(css, /--card-size-adjust/, "牌面尺寸应通过 CSS 变量即时�
 assert.match(css, /--table-tint/, "牌桌亮度应只通过背景色层即时调整");
 assert.match(css, /--motion-deal/, "发牌动画速度应通过 CSS 变量即时调整");
 assert.match(css, /\.tutorial-modal\s*\{[^}]*overflow:\s*auto;/s, "矮屏教程弹窗应允许滚动到底部操作");
+assert.match(css, /\.hand-scroll\s*\{[^}]*height:\s*calc\(117px \+ var\(--hand-top-room\)\);/s, "极值牌面与抬升应扩展手牌顶部空间");
+assert.match(css, /\.announcement-hidden \.hero-panel/, "隐藏公告时首页内容应重新居中排版");
+assert.match(html, /id="toast" role="status" aria-live="polite"/, "普通游戏提示不应强制打断读屏内容");
 assert.match(css, /@media \(max-height:\s*600px\) and \(min-width:761px\)[\s\S]*?\.home-screen\s*\{[^}]*overflow:\s*auto;/s, "短横屏主页面不应裁掉入口");
 assert.match(css, /@media \(max-height:\s*740px\) and \(min-width:761px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*23%;[^}]*transform:\s*translateX\(-50%\);/s, "短屏中央状态不得受内容高度影响并遮挡顶部牌背");
 

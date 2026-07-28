@@ -5,7 +5,7 @@ const vm = require("node:vm");
 let source = fs.readFileSync(require.resolve("../script.js"), "utf8");
 source = source.replace(
   "  initElements();",
-  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM, setAudio, setPreferences, getTuning: () => ({ sfxPitch, bgmTempo, sfxProfile, bgmTexture, aiDelay, autoScrollHints, confirmRestart, haptics, hapticStrength, toastDuration }) };\n  return;\n  initElements();"
+  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, roundComplete, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM, setAudio, setPreferences, getTuning: () => ({ sfxPitch, bgmTempo, sfxProfile, bgmTexture, aiDelay, autoScrollHints, confirmRestart, haptics, hapticStrength, toastDuration }) };\n  return;\n  initElements();"
 );
 
 const clearedTimers = [];
@@ -54,7 +54,7 @@ vm.createContext(context);
 vm.runInContext(source, context);
 
 const {
-  createDeck, detectCombo, canBeat, findAIMove, state, isWild, advanceLevel,
+  createDeck, detectCombo, canBeat, findAIMove, roundComplete, state, isWild, advanceLevel,
   cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM,
   setAudio, setPreferences, getTuning
 } = context.__guandanTest;
@@ -180,6 +180,16 @@ const minimalBomb = findAIMove([...fiveThrees, card("K")], pair8);
 assert.equal(minimalBomb.combo.type, "bomb");
 assert.equal(minimalBomb.cards.length, 4, "四张炸弹足够压制时 AI 不应浪费第五张同点数牌");
 
+const targetFiveBomb = detectCombo([card("K"), card("K", "♥"), card("K", "♣"), card("K", "♦"), card("K", "♠", 1)]);
+const sixNines = [card("9"), card("9", "♥"), card("9", "♣"), card("9", "♦"), card("9", "♠", 1), card("9", "♥", 1)];
+const cheaperStraightFlush = [card("6", "♣"), card("7", "♣"), card("8", "♣"), sixNines[2], card("10", "♣")];
+const efficientBombResponse = findAIMove([...sixNines, ...cheaperStraightFlush.filter(item => item !== sixNines[2])], targetFiveBomb);
+assert.equal(efficientBombResponse.combo.type, "straightflush", "AI 应先用刚好能压制的同花顺，保留更强的六张炸弹");
+
+assert.equal(roundComplete([0, 2]), true, "同队取得头游、二游后应立即按双下结算");
+assert.equal(roundComplete([0, 1]), false, "前两名分属两队时仍需决出第三名");
+assert.equal(roundComplete([0, 1, 2]), true, "决出第三名后应结束本局");
+
 const markupCard = card("3");
 assert.match(cardMarkup(markupCard, true), /^<button/);
 assert.match(cardMarkup(markupCard, true), /aria-pressed="false"/, "手牌应暴露未选中状态");
@@ -283,4 +293,53 @@ assert.deepEqual(clearedTimers, [123], "重新开局前应取消待显示的旧�
 assert.equal(advanceLevel("2", 3), "5");
 assert.equal(advanceLevel("K", 3), "A", "升级不得越过 A");
 
-console.log("规则引擎测试通过：牌堆、10 类牌型、逢人配、压制关系、AI 组合与升级。");
+const simulateRound = level => {
+  state.level = level;
+  const hands = [[], [], [], []];
+  createDeck().forEach((item, index) => hands[index % 4].push(item));
+  const order = [];
+  let player = 0, current = null, leader = null, passes = 0, turns = 0;
+  const nextActivePlayer = from => {
+    let next = (from + 1) % 4;
+    while (order.includes(next)) next = (next + 1) % 4;
+    return next;
+  };
+  while (!roundComplete(order) && turns++ < 700) {
+    const teammateLeading = leader !== null && leader % 2 === player % 2;
+    const move = findAIMove(hands[player], current, teammateLeading);
+    if (move) {
+      assert.equal(canBeat(move.combo, current), true, `打 ${level} 第 ${turns} 手必须合法压制`);
+      const ids = new Set(move.cards.map(item => item.id));
+      hands[player] = hands[player].filter(item => !ids.has(item.id));
+      current = move.combo;
+      leader = player;
+      passes = 0;
+      if (!hands[player].length) order.push(player);
+      if (roundComplete(order)) break;
+      player = nextActivePlayer(player);
+      continue;
+    }
+    assert.ok(current, `打 ${level} 领牌时 AI 不得无牌可出`);
+    passes++;
+    let next = nextActivePlayer(player);
+    const activeCount = 4 - order.length;
+    const leaderActive = !order.includes(leader);
+    if (passes >= activeCount - (leaderActive ? 1 : 0)) {
+      const partner = (leader + 2) % 4;
+      if (order.includes(leader) && !order.includes(partner)) next = partner;
+      current = null;
+      leader = null;
+      passes = 0;
+    }
+    player = next;
+  }
+  assert.ok(roundComplete(order), `打 ${level} 的 AI 对局应在 700 手内完成`);
+};
+
+for (const level of ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]) {
+  simulateRound(level);
+  simulateRound(level);
+}
+state.level = "2";
+
+console.log("规则引擎测试通过：牌堆、10 类牌型、逢人配、压制关系、AI 组合、升级与 26 局全级牌自对局。");

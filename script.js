@@ -364,9 +364,12 @@
   }
 
   function checkEndOrAdvance(fromPlayer) {
-    if (state.finishOrder.length >= 3) {
-      const remaining = [0, 1, 2, 3].find(i => !state.finishOrder.includes(i));
-      if (remaining !== undefined) state.finishOrder.push(remaining);
+    if (roundComplete(state.finishOrder)) {
+      let next = fromPlayer;
+      while (state.finishOrder.length < 4) {
+        next = (next + 1) % 4;
+        if (!state.finishOrder.includes(next)) state.finishOrder.push(next);
+      }
       endGame();
       return;
     }
@@ -381,6 +384,10 @@
     let next = (from + 1) % 4;
     while (state.finishOrder.includes(next)) next = (next + 1) % 4;
     return next;
+  }
+
+  function roundComplete(order) {
+    return order.length >= 3 || (order.length >= 2 && order[0] % 2 === order[1] % 2);
   }
 
   function sendLanAction(payload) {
@@ -529,6 +536,7 @@
     pool.sort((a, b) => {
       const aBomb = isBomb(a.combo), bBomb = isBomb(b.combo);
       if (aBomb !== bBomb) return aBomb ? 1 : -1;
+      if (aBomb) return a.combo.bombPower - b.combo.bombPower;
       return comboScore(a.combo) - comboScore(b.combo);
     });
     const finishing = pool.filter(candidate => candidate.cards.length === hand.length);
