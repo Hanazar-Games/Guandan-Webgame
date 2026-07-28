@@ -97,6 +97,11 @@ vm.createContext(context);
 vm.runInContext(source, context);
 
 assert.match(source, /escapeHtml\(player\.name\)/, "局域网玩家名称写入大厅前必须转义");
+assert.match(source, /let roomBusy = false;/, "创建或加入房间时应使用请求互斥锁");
+assert.match(source, /if \(roomBusy\) return;[\s\S]*roomBusy = true;/, "重复房间请求应在发送前被拦截");
+assert.match(source, /const roomAction = async action => \{[\s\S]*catch \(error\) \{[\s\S]*if \(room\) await leaveRoom\(\);/, "进入大厅失败后应释放已经创建的半连接房间");
+assert.match(source, /const startLanGame = async \(\) => \{[\s\S]*button\.disabled = true;[\s\S]*catch \(error\)/, "联机开局失败时应恢复大厅并显示错误");
+assert.match(source, /catch \(error\) \{[\s\S]*renderRoom\(\);[\s\S]*lan-status[\s\S]*startFailed/, "恢复按钮后不得覆盖联机开局错误提示");
 
 const fire = (id, type) => elements.get(id).listeners.get(type)[0]({ target: elements.get(id), preventDefault() {} });
 assert.equal(outputs.get("setting-sfx-volume").textContent, "100%");
