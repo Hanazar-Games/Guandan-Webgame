@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#071b18" />
     <meta name="description" content="四人掼蛋单机与局域网对局" />
-    <title>掼蛋 · Hanazar Games v0.9.1</title>
+    <title>掼蛋 · Hanazar Games v1.3.0</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -42,14 +42,14 @@
 
         <aside class="announcement-card">
           <div class="announcement-head"><span data-i18n="announcement">最新公告</span><time>2026.07.28</time></div>
-          <div class="announcement-icon">9.1</div>
-          <h3 data-i18n="announcementTitle">规则与体验深度修复</h3>
-          <p data-i18n="announcementCopy">修正双下结算与 AI 炸弹选择，完善设置极值布局、公告重排和键盘操作。</p>
-          <div class="announcement-tags"><span>CUSTOM</span><span>UI/UX</span><span>AUDIO</span></div>
+          <div class="announcement-icon">1.3</div>
+          <h3 data-i18n="announcementTitle">界面与声音体验焕新</h3>
+          <p data-i18n="announcementCopy">新增音效即时试听与分级提示，强化弹窗、回合和操作动效，并加固局域网大厅安全。</p>
+          <div class="announcement-tags"><span>UI/UX</span><span>AUDIO</span><span>LAN</span></div>
         </aside>
       </section>
 
-      <footer class="home-footer"><span>v0.9.1 · Hanazar Games</span><span class="server-ready"><i></i><span data-i18n="ready">准备就绪</span></span></footer>
+      <footer class="home-footer"><span>v1.3.0 · Hanazar Games</span><span class="server-ready"><i></i><span data-i18n="ready">准备就绪</span></span></footer>
     </main>
 
     <main class="game-shell view-hidden" id="game-screen">
@@ -171,7 +171,7 @@
       </section>
 
       <footer class="game-footer">
-        <span><i class="online-dot"></i><span id="game-mode-label" data-i18n="singlePlayer">单机练习</span> <small class="version-tag">v0.9.1</small></span>
+        <span><i class="online-dot"></i><span id="game-mode-label" data-i18n="singlePlayer">单机练习</span> <small class="version-tag">v1.3.0</small></span>
         <span id="footer-tip">你的搭档坐在对面</span>
       </footer>
     </main>
@@ -210,6 +210,7 @@
           <label class="range-setting"><span><b data-i18n="sfxVolume">音效音量</b><output class="range-value" for="setting-sfx-volume">100%</output></span><input id="setting-sfx-volume" type="range" min="0" max="100" value="100"></label>
           <label class="range-setting"><span><b data-i18n="sfxPitch">音效音高</b><output class="range-value" for="setting-sfx-pitch">100%</output></span><input id="setting-sfx-pitch" type="range" min="50" max="180" value="100"></label>
           <label class="select-setting"><span data-i18n="sfxProfile">音效音色</span><select id="setting-sfx-profile"><option value="soft" data-i18n="profileSoft">柔和</option><option value="classic" data-i18n="profileClassic" selected>经典</option><option value="crisp" data-i18n="profileCrisp">清脆</option></select></label>
+          <button class="audio-preview" id="preview-sfx" type="button"><span aria-hidden="true">♪</span><b data-i18n="previewSfx">试听当前音效</b></button>
           <label class="setting-toggle"><span><b data-i18n="bgm">背景音乐</b><small data-i18n="bgmCopy">低音量程序化牌桌音乐</small></span><input id="setting-bgm" type="checkbox"><i></i></label>
           <label class="range-setting"><span><b data-i18n="bgmVolume">音乐音量</b><output class="range-value" for="setting-bgm-volume">70%</output></span><input id="setting-bgm-volume" type="range" min="0" max="100" value="70"></label>
           <label class="range-setting"><span><b data-i18n="bgmTempo">音乐速度</b><output class="range-value" for="setting-bgm-tempo">100%</output></span><input id="setting-bgm-tempo" type="range" min="50" max="200" value="100"></label>
@@ -235,7 +236,7 @@
           <label class="setting-toggle"><span><b data-i18n="haptics">震动反馈</b><small data-i18n="hapticsCopy">支持设备在炸弹与获胜时震动</small></span><input id="setting-haptics" type="checkbox"><i></i></label>
           <label class="range-setting"><span><b data-i18n="hapticStrength">震动强度</b><output class="range-value" for="setting-haptic-strength">100%</output></span><input id="setting-haptic-strength" type="range" min="25" max="200" step="25" value="100"></label>
         </section>
-        <section id="settings-panel-about" class="settings-section about-section" role="tabpanel" aria-labelledby="settings-tab-about" data-settings-panel="about" hidden><h3 data-i18n="about">关于</h3><p>Guandan Webgame v0.9.1</p>
+        <section id="settings-panel-about" class="settings-section about-section" role="tabpanel" aria-labelledby="settings-tab-about" data-settings-panel="about" hidden><h3 data-i18n="about">关于</h3><p>Guandan Webgame v1.3.0</p>
           <div class="about-links"><a href="https://github.com/Hanazar-Games/Guandan-Webgame" target="_blank" rel="noopener">GitHub Repository</a><a href="https://github.com/Hanazar-Games/Guandan-Webgame/issues" target="_blank" rel="noopener">Issues</a><a href="https://github.com/Hanazar-Games/Guandan-Webgame/discussions" target="_blank" rel="noopener">Discussions</a><a href="https://github.com/hzagaming" target="_blank" rel="noopener">HzaGaming</a><a href="https://hanazargames.com/" target="_blank" rel="noopener" data-i18n="officialHome">返回官网</a></div>
         </section>
       </div>
@@ -284,7 +285,7 @@
       <button class="game-button primary modal-confirm" id="again-button" type="button">再来一局</button>
     </dialog>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
     <script src="script.js"></script>
     <script src="app.js"></script>
   </body>

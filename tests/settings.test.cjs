@@ -75,6 +75,7 @@ const document = {
 
 const audioCalls = [];
 const preferenceCalls = [];
+let previewCalls = 0;
 let pauses = 0;
 let resumes = 0;
 const windowListeners = new Map();
@@ -82,6 +83,7 @@ const window = {
   GuandanGame: {
     pause() { pauses++; },
     resume() { resumes++; },
+    previewSfx() { previewCalls++; },
     setAudio(settings) { audioCalls.push(settings); },
     setPreferences(settings) { preferenceCalls.push(settings); }
   },
@@ -93,6 +95,8 @@ const window = {
 const context = { console, document, window, location: { port: "4173", href: "http://localhost:4173/" }, navigator: {} };
 vm.createContext(context);
 vm.runInContext(source, context);
+
+assert.match(source, /escapeHtml\(player\.name\)/, "局域网玩家名称写入大厅前必须转义");
 
 const fire = (id, type) => elements.get(id).listeners.get(type)[0]({ target: elements.get(id), preventDefault() {} });
 assert.equal(outputs.get("setting-sfx-volume").textContent, "100%");
@@ -153,6 +157,11 @@ assert.equal(audioCalls.at(-1).sfxProfile, "crisp");
 elements.get("setting-bgm-texture").value = "rich";
 fire("setting-bgm-texture", "change");
 assert.equal(audioCalls.at(-1).bgmTexture, "rich");
+fire("preview-sfx", "click");
+assert.equal(previewCalls, 1, "声音设置应允许即时试听当前 SFX 参数");
+elements.get("setting-sfx").checked = false;
+fire("setting-sfx", "change");
+assert.equal(elements.get("preview-sfx").disabled, true, "关闭 SFX 后应立即禁用试听按钮");
 
 elements.get("setting-announcements").checked = false;
 fire("setting-announcements", "change");

@@ -74,7 +74,7 @@ body {
 .announcement-card::before { content:""; position:absolute; inset:7px; pointer-events:none; border:1px solid rgba(255,255,255,.055); border-radius:13px; }
 .announcement-head { display:flex; justify-content:space-between; color:var(--gold); font-size:9px; letter-spacing:2px; }
 .announcement-head time { color:var(--muted); letter-spacing:1px; }
-.announcement-icon { width:54px; height:54px; display:grid; place-items:center; margin:28px 0 18px; color:#193629; background:linear-gradient(145deg,#f1d58e,#a77933); border-radius:15px; font-family:Georgia,serif; font-size:22px; box-shadow:0 9px 25px rgba(0,0,0,.3); }
+.announcement-icon { width:54px; height:54px; display:grid; place-items:center; margin:28px 0 18px; color:#193629; background:linear-gradient(145deg,#f1d58e,#a77933); border-radius:15px; font-family:Georgia,serif; font-size:22px; box-shadow:0 9px 25px rgba(0,0,0,.3); animation:badge-breathe calc(var(--motion-float-card) * 1.4) ease-in-out infinite; }
 .announcement-card h3 { margin:0 0 10px; font-family:"Songti SC","Noto Serif SC",serif; font-size:21px; }
 .announcement-card p { margin:0; color:var(--muted); font-size:11px; line-height:1.8; }
 .announcement-tags { display:flex; gap:6px; margin-top:20px; }
@@ -170,6 +170,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .player { position: absolute; display: flex; align-items: center; gap: 10px; z-index: 3; transition: filter .2s; }
 .player::after { content:""; position:absolute; inset:-8px; border:1px solid transparent; border-radius: 15px; pointer-events:none; }
 .player.active::after { border-color: rgba(241,213,142,.52); box-shadow: 0 0 22px rgba(220,181,95,.16), inset 0 0 16px rgba(220,181,95,.06); }
+.player.active .avatar { animation:turn-glow 1.35s ease-in-out infinite; }
 .player.finished { filter: saturate(.4); }
 .avatar-wrap { position: relative; }
 .avatar { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 15px; color: white; font-family: "Songti SC", "Noto Serif SC", serif; font-size: 19px; border: 2px solid rgba(255,255,255,.25); box-shadow: 0 7px 14px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.25); }
@@ -258,6 +259,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .version-tag { padding:1px 5px; color:rgba(241,213,142,.72); border:1px solid rgba(216,182,106,.2); border-radius:8px; font-size:8px; letter-spacing:.5px; }
 
 .modal { width:min(560px,calc(100vw - 30px)); max-height:calc(100vh - 30px); max-height:calc(100dvh - 30px); overflow:auto; padding:0; color:var(--ink); background:linear-gradient(145deg,#123e36,#082a25); border:1px solid rgba(216,182,106,.5); border-radius:16px; box-shadow:0 25px 80px rgba(0,0,0,.6); }
+.modal[open] { animation:modal-enter var(--motion-transition) cubic-bezier(.2,.8,.2,1) both; }
 .modal::backdrop { background:rgba(0,8,7,.78); backdrop-filter:blur(5px); }
 .modal-head { display:flex; align-items:flex-start; justify-content:space-between; padding:25px 28px 18px; border-bottom:1px solid rgba(255,255,255,.1); }
 .modal-head span, .eyebrow { color:var(--gold); font-size:10px; letter-spacing:3px; text-transform:uppercase; }
@@ -281,7 +283,9 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .rank-item { min-width:0; padding:12px 8px; border:1px solid rgba(255,255,255,.12); border-radius:8px; background:rgba(0,0,0,.12); font-size:12px; }
 .rank-item b { display:block; margin-bottom:5px; color:var(--gold-bright); font-family:Georgia,serif; font-size:18px; }
 
-.toast { position:fixed; z-index:20; left:50%; top:95px; width:max-content; max-width:calc(100vw - 24px); transform:translate(-50%,-15px); padding:9px 16px; color:#fff; background:rgba(116,28,25,.94); border:1px solid rgba(255,170,160,.35); border-radius:7px; font-size:12px; text-align:center; opacity:0; pointer-events:none; transition:.2s ease; }
+.toast { position:fixed; z-index:20; left:50%; top:95px; width:max-content; max-width:calc(100vw - 24px); transform:translate(-50%,-15px); padding:9px 16px; color:#fff; background:rgba(20,70,61,.96); border:1px solid rgba(154,223,207,.35); border-radius:7px; font-size:12px; text-align:center; opacity:0; pointer-events:none; transition:.2s ease; box-shadow:0 10px 28px rgba(0,0,0,.25); }
+.toast.success { background:rgba(27,91,65,.96); border-color:rgba(151,235,183,.4); }
+.toast.error { background:rgba(116,28,25,.96); border-color:rgba(255,170,160,.35); }
 .toast.show { opacity:1; transform:translate(-50%,0); }
 
 .settings-modal { width:min(1040px,calc(100vw - 30px)); }
@@ -309,6 +313,9 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .range-setting input { width:52%; min-width:130px; accent-color:var(--gold); cursor:pointer; }
 .range-value { width:max-content; padding:2px 6px; color:var(--gold-bright); border-radius:5px; background:rgba(216,182,106,.1); font:10px Georgia,serif; }
 .select-setting select,.lan-connect input { min-height:38px; padding:0 10px; color:var(--ink); border:1px solid rgba(255,255,255,.16); border-radius:7px; background:#092e28; }
+.audio-preview { width:100%; min-height:42px; display:flex; align-items:center; justify-content:center; gap:8px; margin:8px 0 2px; color:#d6f3ec; border:1px solid rgba(122,211,193,.22); border-radius:8px; background:rgba(36,113,96,.14); cursor:pointer; font-size:11px; transition:var(--motion-transition) ease; }
+.audio-preview span { color:var(--gold-bright); font-size:16px; }
+.audio-preview:disabled { opacity:.38; cursor:not-allowed; }
 .gameplay-section.active { display:grid; grid-template-columns:1fr 1fr; column-gap:26px; }
 .gameplay-section h3 { grid-column:1 / -1; }
 .about-section p { color:var(--muted); font-size:11px; }
@@ -362,12 +369,16 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 @keyframes float-two { 50% { transform:translate(-10px,-18px) rotate(11deg); } }
 @keyframes hand-deal { from { opacity:0; transform:translateY(38px) rotate(4deg); } }
 @keyframes settings-panel-in { from { opacity:0; transform:translateY(7px); } }
+@keyframes modal-enter { from { opacity:0; transform:translateY(14px) scale(.975); } }
+@keyframes turn-glow { 50% { filter:brightness(1.12); box-shadow:0 0 0 3px rgba(241,213,142,.2),0 9px 22px rgba(0,0,0,.3); } }
+@keyframes badge-breathe { 50% { filter:brightness(1.08); box-shadow:0 12px 32px rgba(216,182,106,.18); } }
 .status-dot.thinking { animation:pulse .8s infinite; }
 
 @media (hover:hover) and (pointer:fine) {
   .home-actions button:hover { transform:translateY(-3px); border-color:rgba(241,213,142,.65); filter:brightness(1.06); }
   .ghost-link:hover,.about-links a:hover { color:var(--gold-bright); border-color:rgba(216,182,106,.45); }
   .icon-button:hover, .new-game-button:hover { background:rgba(255,255,255,.12); border-color:rgba(216,182,106,.5); }
+  .audio-preview:hover:not(:disabled) { color:var(--gold-bright); border-color:rgba(216,182,106,.48); transform:translateY(-1px); }
   .game-button.secondary:hover:not(:disabled) { border-color:rgba(241,213,142,.7); background:rgba(15,65,55,.88); }
   .game-button.primary:hover:not(:disabled) { transform:translateY(-1px); filter:brightness(1.06); }
   .card:hover:not(:disabled) { transform:translateY(-8px); filter:brightness(1.04); }

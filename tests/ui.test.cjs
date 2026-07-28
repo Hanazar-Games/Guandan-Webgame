@@ -97,6 +97,7 @@ for (const [id, min, max] of [
 for (const id of ["setting-sfx-profile", "setting-bgm-texture", "setting-auto-scroll", "setting-confirm-restart", "setting-haptics", "setting-announcements", "reset-settings"]) {
   assert.match(html, new RegExp(`id="${id}"`), `设置中心缺少 ${id}`);
 }
+assert.match(html, /id="preview-sfx"/, "声音设置应提供即时试听入口");
 assert.equal((html.match(/class="range-value"/g) || []).length, 14, "每个范围参数都应显示当前数值");
 const settingsMarkup = html.match(/<dialog id="settings-dialog"[\s\S]*?<\/dialog>/)[0];
 assert.equal((settingsMarkup.match(/type="range"/g) || []).length + (settingsMarkup.match(/type="checkbox"/g) || []).length + (settingsMarkup.match(/<select /g) || []).length, 24, "设置中心应提供 24 项可调参数");
@@ -277,6 +278,10 @@ assert.match(css, /\.selection-tip\.power\s*\{[^}]*color:\s*var\(--gold-bright\)
 assert.match(css, /\.selection-tip\.advice\s*\{[^}]*color:\s*#b9ddd5;/s, "过牌建议应使用区别于错误的中性反馈");
 assert.match(css, /@keyframes hero-enter/, "主页面应具备入场动画");
 assert.match(css, /@keyframes hand-deal/, "发牌过程应具备错峰动画");
+assert.match(css, /@keyframes modal-enter/, "弹窗应具备清晰且克制的入场反馈");
+assert.match(css, /\.player\.active \.avatar\s*\{[^}]*animation:/s, "当前行动玩家应具备动态视觉提示");
+assert.match(css, /\.toast\.success\s*\{[^}]*background:/s, "成功提示不应继续使用错误态红色");
+assert.match(css, /\.toast\.error\s*\{[^}]*background:/s, "错误提示应保留独立的危险语义");
 assert.match(css, /body\.reduced-motion/, "设置应允许主动减少动画");
 assert.match(css, /\.setting-toggle input:focus-visible \+ i/, "自定义设置开关应显示键盘焦点");
 assert.match(css, /--card-size-adjust/, "牌面尺寸应通过 CSS 变量即时调整");

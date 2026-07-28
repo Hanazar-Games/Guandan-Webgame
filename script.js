@@ -357,7 +357,7 @@
 
     if (!state.hands[player].length && !state.finishOrder.includes(player)) {
       state.finishOrder.push(player);
-      showToast(`${NAMES[player]} 已出完，获得第 ${state.finishOrder.length} 名`);
+      showToast(`${NAMES[player]} 已出完，获得第 ${state.finishOrder.length} 名`, "success");
     }
     state.selected.clear();
     checkEndOrAdvance(player);
@@ -394,7 +394,7 @@
     const recover = () => {
       render();
       updateSelectionTip();
-      showToast("发送失败，请检查网络后重试");
+      showToast("发送失败，请检查网络后重试", "error");
     };
     try { Promise.resolve(state.lan.send(payload)).catch(recover); } catch (_) { recover(); }
   }
@@ -458,7 +458,7 @@
     el["selection-tip"].textContent = message;
     el["selection-tip"].classList.remove("advice");
     el["selection-tip"].classList.add("error");
-    showToast(message);
+    showToast(message, "error");
     playSfx("error");
   }
 
@@ -687,9 +687,13 @@
   }
 
   let toastTimer;
-  function showToast(message) {
+  function showToast(message, tone = "info") {
     clearTimeout(toastTimer);
     el.toast.textContent = message;
+    el.toast.classList.remove("info");
+    el.toast.classList.remove("success");
+    el.toast.classList.remove("error");
+    el.toast.classList.add(tone);
     el.toast.classList.add("show");
     toastTimer = setTimeout(() => el.toast.classList.remove("show"), toastDuration);
   }
@@ -749,10 +753,6 @@
     } catch (_) {
       return false;
     }
-  }
-
-  function playTone(frequency, duration) {
-    if (state.sound) playVoice(frequency, duration, .035);
   }
 
   function playSfx(kind, detail = 0) {
@@ -961,6 +961,7 @@
     startLanGame() { if (state.lan?.host) startGame(true); },
     applyLanSnapshot,
     handleLanAction,
+    previewSfx() { playSfx("hint"); },
     setAudio,
     setPreferences,
     resume: scheduleAI
@@ -1000,7 +1001,7 @@
       state.sound = !state.sound;
       syncAudioButtons();
       if (state.sound) playSfx("toggle");
-      showToast(state.sound ? "音效已开启" : "音效已关闭");
+      showToast(state.sound ? "音效已开启" : "音效已关闭", state.sound ? "success" : "info");
     });
     el["music-button"].addEventListener("click", () => {
       state.music = !state.music;
@@ -1015,7 +1016,7 @@
         message = "背景音乐已关闭";
       }
       syncAudioButtons();
-      showToast(message);
+      showToast(message, state.music ? "success" : message.includes("不支持") ? "error" : "info");
     });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {

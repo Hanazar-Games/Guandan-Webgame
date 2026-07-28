@@ -5,7 +5,7 @@ const vm = require("node:vm");
 let source = fs.readFileSync(require.resolve("../script.js"), "utf8");
 source = source.replace(
   "  initElements();",
-  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, roundComplete, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM, setAudio, setPreferences, getTuning: () => ({ sfxPitch, bgmTempo, sfxProfile, bgmTexture, aiDelay, autoScrollHints, confirmRestart, haptics, hapticStrength, toastDuration }) };\n  return;\n  initElements();"
+  "  globalThis.__guandanTest = { createDeck, detectCombo, canBeat, findAIMove, roundComplete, state, isWild, advanceLevel, cardMarkup, shortcutAction, cancelResultDialog, playSfx, startBGM, stopBGM, setAudio, setPreferences, getTuning: () => ({ sfxPitch, bgmTempo, sfxProfile, bgmTexture, aiDelay, autoScrollHints, confirmRestart, haptics, hapticStrength, toastDuration }) };\n  return;\n  initElements();"
 );
 
 const clearedTimers = [];
@@ -55,7 +55,7 @@ vm.runInContext(source, context);
 
 const {
   createDeck, detectCombo, canBeat, findAIMove, roundComplete, state, isWild, advanceLevel,
-  cardMarkup, shortcutAction, cancelResultDialog, playTone, playSfx, startBGM, stopBGM,
+  cardMarkup, shortcutAction, cancelResultDialog, playSfx, startBGM, stopBGM,
   setAudio, setPreferences, getTuning
 } = context.__guandanTest;
 const card = (rank, suit = "♠", copy = 0) => ({ id: `${copy}-${suit}-${rank}`, rank, suit, copy, joker: false });
@@ -210,8 +210,8 @@ assert.match(cardMarkup(card("3", "♥"), true), /逢人配/);
 assert.match(cardMarkup(joker(true), true), /joker-big/, "大王应具备独立视觉类名");
 state.level = "2";
 
-playTone(300, .05);
-playTone(400, .05);
+playSfx("select");
+playSfx("select");
 assert.equal(audioContexts, 1, "所有音效应复用同一个 AudioContext");
 const basicToneStarts = oscillatorStarts;
 playSfx("play");

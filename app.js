@@ -4,17 +4,17 @@
   const $ = id => document.getElementById(id);
   const en = {
     officialHome: "Official site", heroKicker: "FOUR PLAYERS · TWO TEAMS", heroTitle: "Master the table, <em>play your way.</em>", heroDescription: "Complete solo practice and LAN rooms. Read the hand, support your partner, and control every trick.",
-    singlePlayer: "Solo practice", singleDescription: "Play with three local AIs", lanGame: "LAN game", lanDescription: "Join the same network with a room code", tutorial: "Beginner tutorial", settings: "Game settings", announcement: "Latest news", announcementTitle: "Rules and experience refinement", announcementCopy: "Correct double-down settlement, smarter bomb choices, safer setting extremes and stronger keyboard access.", ready: "Ready",
-    teammate: "Partner", ourTeam: "Our team", pass: "Pass", hint: "Hint", play: "Play", soundSettings: "Sound", sfx: "Game SFX", sfxCopy: "Cards, hints and results", sfxVolume: "SFX volume", sfxPitch: "SFX pitch", sfxProfile: "SFX tone", profileSoft: "Soft", profileClassic: "Classic", profileCrisp: "Crisp", bgm: "Background music", bgmCopy: "Low-volume procedural soundtrack", bgmVolume: "Music volume", bgmTempo: "Music speed", bgmTexture: "Music layers", textureMinimal: "Minimal", textureBalanced: "Balanced", textureRich: "Rich", displaySettings: "Display & language", language: "Interface language", motion: "Motion", motionFull: "Full animation", motionReduced: "Reduced motion", motionSpeed: "Animation speed", cardScale: "Card size", tableBrightness: "Table brightness", contrast: "Interface contrast", saturation: "Table saturation", announcements: "Home announcement", announcementsCopy: "Show release news on the home screen", gameplaySettings: "Game & interaction", handSpacing: "Hand overlap", selectionLift: "Selection lift", aiDelay: "AI thinking time", toastDuration: "Message duration", autoScroll: "Auto-focus hints", autoScrollCopy: "Scroll suggested cards into view", confirmRestart: "Confirm restart", confirmRestartCopy: "Prevent accidental progress loss", haptics: "Haptic feedback", hapticsCopy: "Vibrate for bombs and wins on supported devices", hapticStrength: "Haptic strength", resetSettings: "Restore defaults", settingsRuntime: "Settings apply to this run only", about: "About",
+    singlePlayer: "Solo practice", singleDescription: "Play with three local AIs", lanGame: "LAN game", lanDescription: "Join the same network with a room code", tutorial: "Beginner tutorial", settings: "Game settings", announcement: "Latest news", announcementTitle: "Refined interface and sound", announcementCopy: "Preview SFX instantly, read clearer feedback, enjoy richer motion, and join a safer LAN lobby.", ready: "Ready",
+    teammate: "Partner", ourTeam: "Our team", pass: "Pass", hint: "Hint", play: "Play", soundSettings: "Sound", sfx: "Game SFX", sfxCopy: "Cards, hints and results", sfxVolume: "SFX volume", sfxPitch: "SFX pitch", sfxProfile: "SFX tone", previewSfx: "Preview current SFX", profileSoft: "Soft", profileClassic: "Classic", profileCrisp: "Crisp", bgm: "Background music", bgmCopy: "Low-volume procedural soundtrack", bgmVolume: "Music volume", bgmTempo: "Music speed", bgmTexture: "Music layers", textureMinimal: "Minimal", textureBalanced: "Balanced", textureRich: "Rich", displaySettings: "Display & language", language: "Interface language", motion: "Motion", motionFull: "Full animation", motionReduced: "Reduced motion", motionSpeed: "Animation speed", cardScale: "Card size", tableBrightness: "Table brightness", contrast: "Interface contrast", saturation: "Table saturation", announcements: "Home announcement", announcementsCopy: "Show release news on the home screen", gameplaySettings: "Game & interaction", handSpacing: "Hand overlap", selectionLift: "Selection lift", aiDelay: "AI thinking time", toastDuration: "Message duration", autoScroll: "Auto-focus hints", autoScrollCopy: "Scroll suggested cards into view", confirmRestart: "Confirm restart", confirmRestartCopy: "Prevent accidental progress loss", haptics: "Haptic feedback", hapticsCopy: "Vibrate for bombs and wins on supported devices", hapticStrength: "Haptic strength", resetSettings: "Restore defaults", settingsRuntime: "Settings apply to this run only", about: "About",
     tutorialKicker: "FIVE STEPS", tutorial1Title: "Know your team", tutorial1Copy: "The player opposite you is your partner. Teamwork matters more than winning every trick.", tutorial2Title: "Use the wild heart", tutorial2Copy: "The heart level card can replace any card except jokers and unlock stronger combinations.", tutorial3Title: "Match before you beat", tutorial3Copy: "Normal hands need the same type and size with a higher value. Bombs break that rule.", tutorial4Title: "Play a turn", tutorial4Copy: "Select cards, ask for a hint when unsure, or pass when no response is available.", tutorial5Title: "Level up together", tutorial5Copy: "The first finisher and partner rank decide the level gain. Win while playing A to finish the match.", previous: "Previous", next: "Next", finish: "Start playing",
-    playerName: "Player name", createRoom: "Create room", or: "or", roomCode: "Room code", joinRoom: "Join room", copy: "Copy", startGame: "Start game", waitingPlayers: "Waiting for players…", host: "Host", player: "Player", lanNeedServer: "Start with npm start, then open the LAN address.", roomReady: "Players may join now. Empty seats will use AI.", copied: "Room code copied", connectionLost: "The host closed the room or the connection was lost."
+    playerName: "Player name", createRoom: "Create room", or: "or", roomCode: "Room code", joinRoom: "Join room", copy: "Copy", startGame: "Start game", waitingPlayers: "Waiting for players…", host: "Host", player: "Player", lanNeedServer: "Start with npm start, then open the LAN address.", roomReady: "Players may join now. Empty seats will use AI.", copied: "Room code copied", copyUnavailable: "Clipboard access is unavailable. Copy the code manually.", connectionLost: "The host closed the room or the connection was lost."
   };
   const zh = {
     officialHome: "返回官网", heroKicker: "四人结盟 · 牌局争锋", heroTitle: "一桌掼蛋，<em>胜负由你。</em>", heroDescription: "完整单机练习与局域网房间。识别牌型、配合对家，在每一次出牌中掌控节奏。",
-    singlePlayer: "单机练习", singleDescription: "与三位本地 AI 对局", lanGame: "局域网联机", lanDescription: "同一网络，房间码加入", tutorial: "新手教程", settings: "游戏设置", announcement: "最新公告", announcementTitle: "规则与体验深度修复", announcementCopy: "修正双下结算与 AI 炸弹选择，完善设置极值布局、公告重排和键盘操作。", ready: "准备就绪",
-    teammate: "队友", ourTeam: "我方", pass: "不出", hint: "提示", play: "出牌", soundSettings: "声音设置", sfx: "游戏音效", sfxCopy: "出牌、提示与胜负反馈", sfxVolume: "音效音量", sfxPitch: "音效音高", sfxProfile: "音效音色", profileSoft: "柔和", profileClassic: "经典", profileCrisp: "清脆", bgm: "背景音乐", bgmCopy: "低音量程序化牌桌音乐", bgmVolume: "音乐音量", bgmTempo: "音乐速度", bgmTexture: "音乐层次", textureMinimal: "轻简", textureBalanced: "均衡", textureRich: "丰富", displaySettings: "显示与语言", language: "界面语言", motion: "动画效果", motionFull: "完整动画", motionReduced: "减少动画", motionSpeed: "动画速度", cardScale: "牌面尺寸", tableBrightness: "牌桌亮度", contrast: "界面对比度", saturation: "牌桌饱和度", announcements: "首页公告", announcementsCopy: "在主页面显示版本动态", gameplaySettings: "对局与交互", handSpacing: "手牌重叠", selectionLift: "选牌抬升", aiDelay: "AI 思考时间", toastDuration: "提示停留时间", autoScroll: "提示自动定位", autoScrollCopy: "将提示选牌滚动到可视区域", confirmRestart: "重开二次确认", confirmRestartCopy: "避免误触导致当前进度丢失", haptics: "震动反馈", hapticsCopy: "支持设备在炸弹与获胜时震动", hapticStrength: "震动强度", resetSettings: "恢复默认设置", settingsRuntime: "设置仅在当前运行期间生效", about: "关于",
+    singlePlayer: "单机练习", singleDescription: "与三位本地 AI 对局", lanGame: "局域网联机", lanDescription: "同一网络，房间码加入", tutorial: "新手教程", settings: "游戏设置", announcement: "最新公告", announcementTitle: "界面与声音体验焕新", announcementCopy: "新增音效即时试听与分级提示，强化弹窗、回合和操作动效，并加固局域网大厅安全。", ready: "准备就绪",
+    teammate: "队友", ourTeam: "我方", pass: "不出", hint: "提示", play: "出牌", soundSettings: "声音设置", sfx: "游戏音效", sfxCopy: "出牌、提示与胜负反馈", sfxVolume: "音效音量", sfxPitch: "音效音高", sfxProfile: "音效音色", previewSfx: "试听当前音效", profileSoft: "柔和", profileClassic: "经典", profileCrisp: "清脆", bgm: "背景音乐", bgmCopy: "低音量程序化牌桌音乐", bgmVolume: "音乐音量", bgmTempo: "音乐速度", bgmTexture: "音乐层次", textureMinimal: "轻简", textureBalanced: "均衡", textureRich: "丰富", displaySettings: "显示与语言", language: "界面语言", motion: "动画效果", motionFull: "完整动画", motionReduced: "减少动画", motionSpeed: "动画速度", cardScale: "牌面尺寸", tableBrightness: "牌桌亮度", contrast: "界面对比度", saturation: "牌桌饱和度", announcements: "首页公告", announcementsCopy: "在主页面显示版本动态", gameplaySettings: "对局与交互", handSpacing: "手牌重叠", selectionLift: "选牌抬升", aiDelay: "AI 思考时间", toastDuration: "提示停留时间", autoScroll: "提示自动定位", autoScrollCopy: "将提示选牌滚动到可视区域", confirmRestart: "重开二次确认", confirmRestartCopy: "避免误触导致当前进度丢失", haptics: "震动反馈", hapticsCopy: "支持设备在炸弹与获胜时震动", hapticStrength: "震动强度", resetSettings: "恢复默认设置", settingsRuntime: "设置仅在当前运行期间生效", about: "关于",
     tutorialKicker: "五步入门", tutorial1Title: "认清你的队伍", tutorial1Copy: "你与对面玩家是一队。配合队友，比单纯压过每一手牌更重要。", tutorial2Title: "认识逢人配", tutorial2Copy: "红桃级牌可以替代除大小王以外的任意牌，是组合强牌的关键。", tutorial3Title: "同型才能压制", tutorial3Copy: "普通牌需要牌型、张数一致且点数更大；炸弹可以打破这一限制。", tutorial4Title: "完成一次出牌", tutorial4Copy: "点击手牌进行选择。拿不准时使用提示，没有合适的牌就选择不出。", tutorial5Title: "与队友一起升级", tutorial5Copy: "头游与队友名次决定升级幅度。率先打过 A 即可完成比赛。", previous: "上一步", next: "下一步", finish: "开始游戏",
-    playerName: "玩家名称", createRoom: "创建房间", or: "或", roomCode: "房间码", joinRoom: "加入房间", copy: "复制", startGame: "开始游戏", waitingPlayers: "等待玩家加入…", host: "房主", player: "玩家", lanNeedServer: "请使用 npm start 启动项目，再通过局域网地址访问。", roomReady: "可以邀请玩家加入，空座将由 AI 补齐。", copied: "房间码已复制", connectionLost: "房主已关闭房间或网络连接已中断。"
+    playerName: "玩家名称", createRoom: "创建房间", or: "或", roomCode: "房间码", joinRoom: "加入房间", copy: "复制", startGame: "开始游戏", waitingPlayers: "等待玩家加入…", host: "房主", player: "玩家", lanNeedServer: "请使用 npm start 启动项目，再通过局域网地址访问。", roomReady: "可以邀请玩家加入，空座将由 AI 补齐。", copied: "房间码已复制", copyUnavailable: "当前无法访问剪贴板，请手动复制房间码。", connectionLost: "房主已关闭房间或网络连接已中断。"
   };
   const locale = (overrides = {}) => ({ ...en, ...overrides });
   const I18N = {
@@ -44,6 +44,7 @@
   let settings = { ...DEFAULT_SETTINGS };
 
   const t = key => (I18N[language] || en)[key] || en[key] || key;
+  const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
   const translate = () => {
     document.documentElement.lang = language;
     document.querySelectorAll("[data-i18n]").forEach(element => {
@@ -97,6 +98,7 @@
       .forEach(([id, key]) => { $(id).checked = settings[key]; });
   };
   const applyRuntimeSettings = () => {
+    $("preview-sfx").disabled = !settings.sound;
     document.body.classList.toggle("reduced-motion", settings.motion === "reduced");
     document.documentElement.style.setProperty("--card-size-adjust", `${(settings.cardScale - 100) * .3}px`);
     document.documentElement.style.setProperty("--hand-spacing", String(settings.handSpacing / 100).replace(/^0/, ""));
@@ -196,7 +198,10 @@
   const renderRoom = () => {
     if (!room || !$("lan-players")) return;
     $("current-room-code").textContent = room.code;
-    $("lan-players").innerHTML = (room.players || []).map(player => `<div class="lan-player"><i>${player.name.slice(0, 1)}</i><span>${player.name}</span><small>${player.seat === 0 ? t("host") : `${t("player")} ${player.seat + 1}`}</small></div>`).join("");
+    $("lan-players").innerHTML = (room.players || []).map(player => {
+      const name = escapeHtml(player.name);
+      return `<div class="lan-player"><i>${escapeHtml(player.name.slice(0, 1))}</i><span>${name}</span><small>${player.seat === 0 ? t("host") : `${t("player")} ${player.seat + 1}`}</small></div>`;
+    }).join("");
     $("lan-status").textContent = (room.players?.length || 0) < 2 ? t("waitingPlayers") : t("roomReady");
     $("start-lan-game").disabled = !room.host || (room.players?.length || 0) < 2;
   };
@@ -255,8 +260,11 @@
   $("create-room").addEventListener("click", () => roomAction("create"));
   $("join-room").addEventListener("click", () => roomAction("join"));
   $("copy-room-code").addEventListener("click", async () => {
-    await navigator.clipboard?.writeText(room.code);
-    $("lan-status").textContent = t("copied");
+    if (!navigator.clipboard?.writeText) return void ($("lan-status").textContent = t("copyUnavailable"));
+    try {
+      await navigator.clipboard.writeText(room.code);
+      $("lan-status").textContent = t("copied");
+    } catch (_) { $("lan-status").textContent = t("copyUnavailable"); }
   });
   $("start-lan-game").addEventListener("click", async () => {
     const seats = room.players.map(player => player.seat);
@@ -284,6 +292,7 @@
   $("motion-select").addEventListener("change", event => { settings.motion = event.target.value; applyRuntimeSettings(); });
   [["setting-sfx-profile", "sfxProfile"], ["setting-bgm-texture", "bgmTexture"]]
     .forEach(([id, key]) => $(id).addEventListener("change", event => { settings[key] = event.target.value; applyRuntimeSettings(); }));
+  $("preview-sfx").addEventListener("click", () => window.GuandanGame?.previewSfx());
   [["setting-sfx", "sound"], ["setting-bgm", "music"], ["setting-announcements", "announcements"], ["setting-auto-scroll", "autoScroll"], ["setting-confirm-restart", "confirmRestart"], ["setting-haptics", "haptics"]]
     .forEach(([id, key]) => $(id).addEventListener("change", event => { settings[key] = event.target.checked; applyRuntimeSettings(); }));
   for (const [id, key] of Object.entries(rangeSettings)) $(id).addEventListener("input", event => {
