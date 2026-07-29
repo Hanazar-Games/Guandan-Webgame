@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const root = new URL("../", `file://${__filename}`);
 const read = file => fs.readFileSync(new URL(file, root), "utf8");
 const pkg = JSON.parse(read("package.json"));
-const version = "1.3.1";
+const version = "1.3.2";
 
 assert.equal(pkg.version, version);
 assert.match(read("index.html"), new RegExp(`v${version.replaceAll(".", "\\.")}`));

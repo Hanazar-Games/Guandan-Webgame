@@ -11,6 +11,7 @@
     straight: "顺子", pairs: "三连对", steel: "钢板", bomb: "炸弹",
     straightflush: "同花顺", jokerbomb: "四王炸"
   };
+  const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
 
   const state = {
     level: "2",
@@ -672,7 +673,7 @@
     el["result-copy"].textContent = matchCompleted
       ? `${ourWin ? "我方" : "对方"}打 A 成功，完成整场比赛！`
       : `${sweep ? "双下！" : `${NAMES[state.finishOrder[0]]} 获得头游。`} ${ourWin ? "我方" : "对方"}连升 ${advance} 级，下一局打 ${state.level}。`;
-    el.ranking.innerHTML = state.finishOrder.map((p, i) => `<div class="rank-item"><b>${i + 1}</b>${NAMES[p]}</div>`).join("");
+    renderRanking();
     state.round++;
     el["again-button"].textContent = matchCompleted ? "开始新比赛" : "继续下一局";
     el["again-button"].dataset.resetMatch = matchCompleted ? "true" : "false";
@@ -760,7 +761,7 @@
       const scale = value => Math.round(value * hapticStrength);
       window.navigator?.vibrate?.(kind === "bomb" ? scale(45) : [scale(35), scale(35), scale(70)]);
     }
-    if (!state.sound) return;
+    if (!state.sound) return false;
     const profile = {
       soft: { volume: .76, duration: 1.18, type: "sine" },
       classic: { volume: 1, duration: 1, type: null },
@@ -779,7 +780,7 @@
       finish: [[220, .18, .025, "triangle", 0], [196, .24, .02, "triangle", .12]],
       win: [[392, .12, .026, "triangle", 0], [493.88, .16, .024, "triangle", .08], [587.33, .28, .022, "triangle", .17]]
     }[kind] || [];
-    voices.forEach(([frequency, duration, volume, type, delay]) => playVoice(frequency * sfxPitch, duration * profile.duration, volume * sfxVolume * profile.volume, profile.type || type, null, delay));
+    return voices.map(([frequency, duration, volume, type, delay]) => playVoice(frequency * sfxPitch, duration * profile.duration, volume * sfxVolume * profile.volume, profile.type || type, null, delay)).every(Boolean);
   }
 
   function playBGMNote() {
@@ -843,20 +844,19 @@
       lastAdvance: state.lastAdvance, names: NAMES,
       result: {
         title: el["result-title"].textContent, copy: el["result-copy"].textContent,
-        ranking: el.ranking.innerHTML, again: el["again-button"].textContent,
-        resetMatch: el["again-button"].dataset.resetMatch
+        again: el["again-button"].textContent, resetMatch: el["again-button"].dataset.resetMatch
       }
     };
   }
 
   function syncLanState() {
-    if (state.lan?.host) Promise.resolve(state.lan.send({ type: "snapshot", state: lanSnapshot() })).catch(() => {});
+    if (state.lan?.host) Promise.resolve(state.lan.send({ type: "snapshot", revision: ++state.lan.revision, state: lanSnapshot() })).catch(() => {});
   }
 
   function configureLan({ seat, host, humanSeats, names, send }) {
     pauseAI();
     state.localPlayer = seat;
-    state.lan = { host, humanSeats: [...humanSeats], send };
+    state.lan = { host, humanSeats: [...humanSeats], send, revision: 0, lastRevision: -1 };
     NAMES = [...names];
     state.selected.clear();
     state.animateDeal = !host;
@@ -871,8 +871,13 @@
     scheduleAI();
   }
 
-  function applyLanSnapshot(snapshot) {
-    if (!state.lan || state.lan.host) return;
+  function renderRanking() {
+    el.ranking.innerHTML = state.finishOrder.map((player, index) => `<div class="rank-item"><b>${index + 1}</b>${escapeHtml(NAMES[player])}</div>`).join("");
+  }
+
+  function applyLanSnapshot(snapshot, revision) {
+    if (!state.lan || state.lan.host || !Number.isSafeInteger(revision) || revision <= state.lan.lastRevision) return;
+    state.lan.lastRevision = revision;
     const previousPlayer = state.currentPlayer;
     const previousHistorySize = state.history.length;
     const wasLocked = state.locked;
@@ -886,7 +891,7 @@
     if (snapshot.result) {
       el["result-title"].textContent = snapshot.result.title;
       el["result-copy"].textContent = snapshot.result.copy;
-      el.ranking.innerHTML = snapshot.result.ranking;
+      renderRanking();
       el["again-button"].textContent = state.locked ? "等待房主继续" : snapshot.result.again;
       el["again-button"].disabled = state.locked;
     }
@@ -961,7 +966,7 @@
     startLanGame() { if (state.lan?.host) startGame(true); },
     applyLanSnapshot,
     handleLanAction,
-    previewSfx() { playSfx("hint"); },
+    previewSfx() { if (!playSfx("hint")) showToast("当前浏览器不支持音效", "error"); },
     setAudio,
     setPreferences,
     resume: scheduleAI

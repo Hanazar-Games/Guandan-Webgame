@@ -110,6 +110,7 @@ assert.match(settingsMarkup, /id="settings-panel-display"[^>]*hidden/, "非活�
 assert.equal((html.match(/<option value="(?:zh-CN|zh-TW|en|ja|ko|es|fr|de|pt|ru)"/g) || []).length, 10, "语言设置应提供 10 种语言");
 assert.equal((html.match(/class="tutorial-slide(?: active)?"/g) || []).length, 5, "新手教程应包含五个步骤");
 assert.match(html, /id="lan-dialog"[\s\S]*id="create-room"[\s\S]*id="join-room"[\s\S]*id="start-lan-game"/, "局域网大厅应具备建房、加入和开始入口");
+assert.match(html, /id="leave-room"/, "局域网大厅应提供明确的退出房间入口");
 assert.match(html, /https:\/\/github\.com\/Hanazar-Games\/Guandan-Webgame\/issues/);
 assert.match(html, /https:\/\/github\.com\/Hanazar-Games\/Guandan-Webgame\/discussions/);
 assert.match(html, /https:\/\/github\.com\/hzagaming/);
@@ -145,6 +146,8 @@ musicClicks[0]();
 assert.equal(context.__guandanState.music, false);
 assert.equal(elements.get("music-button").attributes.get("aria-pressed"), "false");
 assert.match(elements.get("toast").textContent, /不支持/, "Web Audio 不可用时应说明原因而非假称开启");
+context.window.GuandanGame.previewSfx();
+assert.match(elements.get("toast").textContent, /不支持音效/, "SFX 试听失败时应提供明确反馈");
 
 const restartDialog = elements.get("restart-dialog");
 elements.get("new-game-button").listeners.get("click")[0]();
@@ -288,7 +291,10 @@ assert.match(css, /--card-size-adjust/, "牌面尺寸应通过 CSS 变量即时�
 assert.match(css, /--table-tint/, "牌桌亮度应只通过背景色层即时调整");
 assert.match(css, /--motion-deal/, "发牌动画速度应通过 CSS 变量即时调整");
 assert.match(css, /\.tutorial-modal\s*\{[^}]*overflow:\s*auto;/s, "矮屏教程弹窗应允许滚动到底部操作");
+assert.match(css, /\.tutorial-slides\s*\{[^}]*overflow:\s*hidden;/s, "非活动教程页不得造成窄屏横向滚动");
 assert.match(css, /\.hand-scroll\s*\{[^}]*height:\s*calc\(117px \+ var\(--hand-top-room\)\);/s, "极值牌面与抬升应扩展手牌顶部空间");
+assert.match(css, /\.action-area\s*\{[^}]*bottom:\s*calc\(142px \+ var\(--hand-clearance\)\);/s, "扩展手牌时操作区应同步避让");
+assert.match(css, /body\.expanded-hand \.action-area/, "短屏极值手牌应改用侧向操作布局");
 assert.match(css, /\.announcement-hidden \.hero-panel/, "隐藏公告时首页内容应重新居中排版");
 assert.match(html, /id="toast" role="status" aria-live="polite"/, "普通游戏提示不应强制打断读屏内容");
 assert.match(css, /@media \(max-height:\s*600px\) and \(min-width:761px\)[\s\S]*?\.home-screen\s*\{[^}]*overflow:\s*auto;/s, "短横屏主页面不应裁掉入口");
@@ -312,6 +318,21 @@ context.__guandanState.selected.add(context.__guandanState.hands[0][0].id);
 assert.doesNotThrow(() => elements.get("play-button").listeners.get("click")[0](), "访客发送失败不应穿透到全局事件循环");
 assert.equal(elements.get("play-button").disabled, false, "访客发送失败后应恢复出牌按钮以便重试");
 assert.match(elements.get("toast").textContent, /发送失败/, "访客发送失败后应提供明确反馈");
+const lanSnapshot = marker => ({
+  level: context.__guandanState.level, round: context.__guandanState.round, hands: context.__guandanState.hands,
+  currentPlayer: marker, currentPlay: null, lastPlayer: null, passCount: 0, finishOrder: [], locked: false,
+  history: [{ marker }], teamLevels: context.__guandanState.teamLevels, teamWins: context.__guandanState.teamWins,
+  dealer: 0, lastAdvance: 0, names: ["<img src=x onerror=alert(1)>", "房主", "AI 1", "AI 2"]
+});
+context.window.GuandanGame.applyLanSnapshot(lanSnapshot(2), 2);
+context.window.GuandanGame.applyLanSnapshot(lanSnapshot(1), 1);
+assert.equal(context.__guandanState.currentPlayer, 2, "迟到的旧快照不得覆盖较新的联机状态");
+const resultSnapshot = lanSnapshot(0);
+resultSnapshot.finishOrder = [0, 1, 2, 3];
+resultSnapshot.result = { title: "结果", copy: "完成", ranking: '<img src=x onerror="alert(1)">', again: "继续", resetMatch: "false" };
+context.window.GuandanGame.applyLanSnapshot(resultSnapshot, 3);
+assert.doesNotMatch(elements.get("ranking").innerHTML, /<img/i, "访客不得直接写入房主提供的排名 HTML");
+assert.match(elements.get("ranking").innerHTML, /&lt;img/, "排名中的玩家名称应作为文本转义");
 context.window.GuandanGame.startSingle();
 
 console.log("UI 启动测试通过：DOM、发牌、牌面语义、音频控制和弹窗事件均已接线。");

@@ -14,6 +14,16 @@ const { createGameServer } = require("../lan-server.cjs");
     assert.match(await home.text(), /id="home-screen"/);
     assert.equal((await fetch(`${base}/.git/config`)).status, 403, "静态服务不得暴露仓库内部文件");
 
+    const malformed = await request("/api/rooms", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{" });
+    assert.equal(malformed.status, 400, "畸形 JSON 应返回客户端错误而非服务器错误");
+    const oversized = await request("/api/rooms", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "x".repeat(33000) }) });
+    assert.equal(oversized.status, 413, "超大请求应返回明确状态而非直接断开连接");
+
+    const solo = await request("/api/rooms", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "独自房主" }) });
+    const soloStart = await request(`/api/rooms/${solo.body.room.code}/message?client=${solo.body.clientId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ payload: { type: "start" } }) });
+    assert.equal(soloStart.status, 409, "不足两名真人时服务端不得接受开局");
+    await request(`/api/rooms/${solo.body.room.code}/leave?client=${solo.body.clientId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+
     const created = await request("/api/rooms", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "房主" }) });
     assert.equal(created.status, 201);
     assert.equal(created.body.room.players[0].seat, 0);
@@ -43,6 +53,7 @@ const { createGameServer } = require("../lan-server.cjs");
     assert.equal(forged.status, 403, "访客不得伪造房主牌局快照");
     const started = await request(`/api/rooms/${code}/message?client=${created.body.clientId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ payload: { type: "start" } }) });
     assert.equal(started.status, 202);
+    assert.equal(started.body.room.players.length, 2, "开局响应应返回服务端确认的实时阵容");
     const lateJoin = await request(`/api/rooms/${code}/join`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "迟到玩家" }) });
     assert.equal(lateJoin.status, 409, "开局后不得继续加入房间");
 

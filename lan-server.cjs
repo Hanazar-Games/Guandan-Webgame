@@ -25,12 +25,26 @@ function createGameServer(root = __dirname, { disconnectGraceMs = 15000 } = {}) 
 
   const readJson = request => new Promise((resolve, reject) => {
     let body = "";
+    let size = 0;
+    let oversized = false;
     request.on("data", chunk => {
+      if (oversized) return;
+      size += chunk.length;
+      if (size > 32768) {
+        oversized = true;
+        const error = new Error("请求内容过大");
+        error.status = 413;
+        reject(error);
+        return;
+      }
       body += chunk;
-      if (body.length > 32768) request.destroy();
     });
     request.on("end", () => {
-      try { resolve(body ? JSON.parse(body) : {}); } catch (error) { reject(error); }
+      if (oversized) return;
+      try { resolve(body ? JSON.parse(body) : {}); } catch (error) {
+        error.status = 400;
+        reject(error);
+      }
     });
     request.on("error", reject);
   });
@@ -135,9 +149,16 @@ function createGameServer(root = __dirname, { disconnectGraceMs = 15000 } = {}) 
     if (request.method === "POST" && action === "message") {
       const body = await readJson(request);
       if (["start", "snapshot"].includes(body.payload?.type) && player.seat !== 0) return sendJson(response, 403, { error: "仅房主可同步牌局" });
-      if (body.payload?.type === "start") room.started = true;
-      emit(room, "message", { sender: clientId, seat: player.seat, payload: body.payload });
-      return sendJson(response, 202, { ok: true });
+      let payload = body.payload;
+      let startedRoom;
+      if (payload?.type === "start") {
+        if (room.players.size < 2) return sendJson(response, 409, { error: "至少需要两名玩家" });
+        room.started = true;
+        startedRoom = roomView(room);
+        payload = { type: "start", players: startedRoom.players };
+      }
+      emit(room, "message", { sender: clientId, seat: player.seat, payload });
+      return sendJson(response, 202, { ok: true, ...(startedRoom ? { room: startedRoom } : {}) });
     }
 
     if (request.method === "POST" && action === "leave") {
@@ -172,6 +193,8 @@ function createGameServer(root = __dirname, { disconnectGraceMs = 15000 } = {}) 
       });
       response.end(request.method === "HEAD" ? undefined : content);
     } catch (error) {
+      if (error.status) return sendJson(response, error.status, { error: error.message });
+      if (error instanceof URIError) return sendJson(response, 400, { error: "请求地址无效" });
       if (error.code === "ENOENT") return sendJson(response, 404, { error: "资源不存在" });
       sendJson(response, 500, { error: "服务器内部错误" });
     }

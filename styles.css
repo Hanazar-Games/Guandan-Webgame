@@ -16,6 +16,7 @@
   --selection-lift: 1;
   --selection-lift-offset: -20px;
   --hand-top-room: 8px;
+  --hand-clearance: 0px;
   --motion-hero: .7s;
   --motion-deal: .36s;
   --motion-play: .22s;
@@ -214,7 +215,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .played-cards .card:first-child { margin-left:0; }
 .combo-label { display:inline-block; min-height:23px; margin-top:6px; padding:3px 10px; color:var(--gold-bright); font-size:11px; border-radius:10px; background:rgba(4,30,26,.38); }
 
-.action-area { position:absolute; bottom:142px; left:50%; transform:translateX(-50%); z-index:8; text-align:center; }
+.action-area { position:absolute; bottom:calc(142px + var(--hand-clearance)); left:50%; transform:translateX(-50%); z-index:8; text-align:center; }
 .selection-tip { min-height:20px; margin:0 0 7px; color:rgba(255,255,255,.55); font-size:11px; line-height:1.45; }
 .selection-tip.error { color:#ffaaa0; }
 .selection-tip.advice { color:#b9ddd5; }
@@ -328,7 +329,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .tutorial-progress { display:flex; gap:6px; padding:18px 28px 0; }
 .tutorial-progress i { height:3px; flex:1; border-radius:2px; background:rgba(255,255,255,.12); transition:var(--motion-transition) ease; }
 .tutorial-progress i.active { background:var(--gold); box-shadow:0 0 10px rgba(216,182,106,.4); }
-.tutorial-slides { min-height:360px; position:relative; }
+.tutorial-slides { min-height:360px; position:relative; overflow:hidden; }
 .tutorial-slide { position:absolute; inset:0; padding:24px 34px; text-align:center; opacity:0; transform:translateX(30px); pointer-events:none; transition:var(--motion-transition) ease; }
 .tutorial-slide.active { opacity:1; transform:none; pointer-events:auto; }
 .tutorial-slide > b { color:rgba(216,182,106,.45); font-family:Georgia,serif; font-size:12px; letter-spacing:2px; }
@@ -358,6 +359,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .lan-player i { width:28px; height:28px; display:grid; place-items:center; color:#183429; border-radius:8px; background:var(--gold); font-style:normal; }
 .lan-player small { margin-left:auto; color:var(--muted); }
 .lan-status { min-height:18px; color:#b9ddd5; font-size:10px; }
+.lan-lobby-actions { display:grid; grid-template-columns:auto 1fr; gap:10px; }
 .lan-start { width:100%; }
 
 @keyframes deal-in { from { opacity:0; transform:translateY(-9px) scale(.94); } to { opacity:1; transform:none; } }
@@ -412,7 +414,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .opponent-left, .opponent-right { display:none; }
   .trick-zone { top:36%; width:72vw; }
   .played-cards .card { --card-w:calc(45px + var(--card-size-adjust)); margin-left:-19px; }
-  .action-area { bottom:151px; }
+  .action-area { bottom:calc(151px + var(--hand-clearance)); }
   .game-button { height:44px; }
   .hand-scroll { left:2%; right:2%; bottom:16px; }
   .team-badge { display:none; }
@@ -467,9 +469,13 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .player-top { top:12px; }
   .opponent-top { top:75px; }
   .trick-zone { top:23%; transform:translateX(-50%); }
-  .action-area { bottom:128px; }
+  .action-area { bottom:calc(128px + var(--hand-clearance)); }
   .hand-scroll { height:calc(105px + var(--hand-top-room)); }
   .player-you { bottom:72px; }
+  body.expanded-hand .action-area { right:16px; bottom:12px; left:auto; transform:none; }
+  body.expanded-hand .hand-scroll { right:40%; left:9%; }
+  body.expanded-hand .player-you { left:20px; bottom:22px; }
+  body.expanded-hand .player-you .player-copy { display:none; }
 }
 
 @media (max-height:650px) and (max-width:760px) {
@@ -484,7 +490,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .played-cards { min-height:60px; }
   .played-cards .card { --card-w:calc(40px + var(--card-size-adjust)); }
   .combo-label { min-height:19px; margin-top:0; }
-  .action-area { bottom:103px; }
+  .action-area { bottom:calc(103px + var(--hand-clearance)); }
   .selection-tip { margin-bottom:4px; }
   .player-you { bottom:84px; }
   .hand-scroll { bottom:4px; height:calc(94px + var(--hand-top-room)); }

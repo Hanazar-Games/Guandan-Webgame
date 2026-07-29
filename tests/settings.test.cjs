@@ -3,7 +3,11 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
-const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
+let source = fs.readFileSync(require.resolve("../app.js"), "utf8");
+source = source.replace(
+  "  syncSettingsControls();\n  applyRuntimeSettings();\n  translate();\n  showHome();",
+  "  globalThis.__appTest = { renderRoom, showGame, setRoom: value => { room = value; } };\n  syncSettingsControls();\n  applyRuntimeSettings();\n  translate();\n  showHome();"
+);
 
 class ClassList {
   constructor() { this.values = new Set(); }
@@ -100,8 +104,9 @@ assert.match(source, /escapeHtml\(player\.name\)/, "局域网玩家名称写入�
 assert.match(source, /let roomBusy = false;/, "创建或加入房间时应使用请求互斥锁");
 assert.match(source, /if \(roomBusy\) return;[\s\S]*roomBusy = true;/, "重复房间请求应在发送前被拦截");
 assert.match(source, /const roomAction = async action => \{[\s\S]*catch \(error\) \{[\s\S]*if \(room\) await leaveRoom\(\);/, "进入大厅失败后应释放已经创建的半连接房间");
-assert.match(source, /const startLanGame = async \(\) => \{[\s\S]*button\.disabled = true;[\s\S]*catch \(error\)/, "联机开局失败时应恢复大厅并显示错误");
+assert.match(source, /const startLanGame = async \(\) => \{[\s\S]*activeRoom\.starting = true;[\s\S]*catch \(error\) \{[\s\S]*activeRoom\.starting = false;/, "联机开局失败时应恢复大厅并显示错误");
 assert.match(source, /catch \(error\) \{[\s\S]*renderRoom\(\);[\s\S]*lan-status[\s\S]*startFailed/, "恢复按钮后不得覆盖联机开局错误提示");
+assert.match(source, /slide\.setAttribute\("aria-hidden", String\(!active\)\)/, "非活动教程页应从读屏树隐藏");
 
 const fire = (id, type) => elements.get(id).listeners.get(type)[0]({ target: elements.get(id), preventDefault() {} });
 assert.equal(outputs.get("setting-sfx-volume").textContent, "100%");
@@ -149,6 +154,8 @@ assert.equal(documentElement.style.getPropertyValue("--selection-lift"), "1.8");
 elements.get("setting-card-scale").value = "150";
 fire("setting-card-scale", "input");
 assert.equal(documentElement.style.getPropertyValue("--hand-top-room"), "45.3px", "最大牌面和抬升叠加时应预留顶部空间");
+assert.equal(documentElement.style.getPropertyValue("--hand-clearance"), "37.3px", "手牌扩展时应同步为操作区预留间距");
+assert.equal(body.classList.contains("expanded-hand"), true, "短屏应能识别需要侧向分栏的极值手牌");
 elements.get("setting-toast-duration").value = "5000";
 fire("setting-toast-duration", "input");
 assert.equal(preferenceCalls.at(-1).toastDuration, 5000);
@@ -179,6 +186,16 @@ assert.equal(elements.get("settings-dialog").open, true);
 assert.equal(pauses > 0, true, "牌局内打开设置应暂停 AI");
 fire("close-settings", "click");
 assert.equal(resumes, 1, "关闭牌局设置后应恢复 AI");
+
+context.__appTest.setRoom({ code: "ABC123", clientId: "host", seat: 0, host: true, players: [{ seat: 0, name: "房主" }, { seat: 1, name: "访客" }], started: false, starting: true });
+context.__appTest.renderRoom();
+assert.equal(elements.get("start-lan-game").disabled, true, "开局请求期间大厅更新不得重新启用开始按钮");
+assert.equal(elements.get("start-lan-game").textContent, "正在开始游戏…", "开局请求期间按钮应显示忙碌状态");
+
+elements.get("language-select").value = "en";
+fire("language-select", "change");
+context.__appTest.showGame("lanGame");
+assert.equal(elements.get("game-mode-label").textContent, "LAN game", "切换语言后联机模式不得误显示为单机练习");
 
 fire("reset-settings", "click");
 assert.equal(elements.get("setting-card-scale").value, 100);

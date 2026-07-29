@@ -4,17 +4,17 @@
   const $ = id => document.getElementById(id);
   const en = {
     officialHome: "Official site", heroKicker: "FOUR PLAYERS · TWO TEAMS", heroTitle: "Master the table, <em>play your way.</em>", heroDescription: "Complete solo practice and LAN rooms. Read the hand, support your partner, and control every trick.",
-    singlePlayer: "Solo practice", singleDescription: "Play with three local AIs", lanGame: "LAN game", lanDescription: "Join the same network with a room code", tutorial: "Beginner tutorial", settings: "Game settings", announcement: "Latest news", announcementTitle: "More reliable LAN flow", announcementCopy: "Prevent duplicate room requests and recover controls with clear feedback when starting fails.", ready: "Ready",
+    singlePlayer: "Solo practice", singleDescription: "Play with three local AIs", lanGame: "LAN game", lanDescription: "Join the same network with a room code", tutorial: "Beginner tutorial", settings: "Game settings", announcement: "Latest news", announcementTitle: "Full stability audit", announcementCopy: "Fix atomic LAN starts, stale snapshots, extreme hand layouts and tutorial overflow.", ready: "Ready",
     teammate: "Partner", ourTeam: "Our team", pass: "Pass", hint: "Hint", play: "Play", soundSettings: "Sound", sfx: "Game SFX", sfxCopy: "Cards, hints and results", sfxVolume: "SFX volume", sfxPitch: "SFX pitch", sfxProfile: "SFX tone", previewSfx: "Preview current SFX", profileSoft: "Soft", profileClassic: "Classic", profileCrisp: "Crisp", bgm: "Background music", bgmCopy: "Low-volume procedural soundtrack", bgmVolume: "Music volume", bgmTempo: "Music speed", bgmTexture: "Music layers", textureMinimal: "Minimal", textureBalanced: "Balanced", textureRich: "Rich", displaySettings: "Display & language", language: "Interface language", motion: "Motion", motionFull: "Full animation", motionReduced: "Reduced motion", motionSpeed: "Animation speed", cardScale: "Card size", tableBrightness: "Table brightness", contrast: "Interface contrast", saturation: "Table saturation", announcements: "Home announcement", announcementsCopy: "Show release news on the home screen", gameplaySettings: "Game & interaction", handSpacing: "Hand overlap", selectionLift: "Selection lift", aiDelay: "AI thinking time", toastDuration: "Message duration", autoScroll: "Auto-focus hints", autoScrollCopy: "Scroll suggested cards into view", confirmRestart: "Confirm restart", confirmRestartCopy: "Prevent accidental progress loss", haptics: "Haptic feedback", hapticsCopy: "Vibrate for bombs and wins on supported devices", hapticStrength: "Haptic strength", resetSettings: "Restore defaults", settingsRuntime: "Settings apply to this run only", about: "About",
     tutorialKicker: "FIVE STEPS", tutorial1Title: "Know your team", tutorial1Copy: "The player opposite you is your partner. Teamwork matters more than winning every trick.", tutorial2Title: "Use the wild heart", tutorial2Copy: "The heart level card can replace any card except jokers and unlock stronger combinations.", tutorial3Title: "Match before you beat", tutorial3Copy: "Normal hands need the same type and size with a higher value. Bombs break that rule.", tutorial4Title: "Play a turn", tutorial4Copy: "Select cards, ask for a hint when unsure, or pass when no response is available.", tutorial5Title: "Level up together", tutorial5Copy: "The first finisher and partner rank decide the level gain. Win while playing A to finish the match.", previous: "Previous", next: "Next", finish: "Start playing",
-    playerName: "Player name", createRoom: "Create room", or: "or", roomCode: "Room code", joinRoom: "Join room", copy: "Copy", startGame: "Start game", startingGame: "Starting game…", startFailed: "Could not start the game. Check the connection and retry.", waitingPlayers: "Waiting for players…", host: "Host", player: "Player", lanNeedServer: "Start with npm start, then open the LAN address.", roomReady: "Players may join now. Empty seats will use AI.", copied: "Room code copied", copyUnavailable: "Clipboard access is unavailable. Copy the code manually.", connectionLost: "The host closed the room or the connection was lost."
+    playerName: "Player name", createRoom: "Create room", or: "or", roomCode: "Room code", joinRoom: "Join room", copy: "Copy", leaveRoom: "Leave room", startGame: "Start game", startingGame: "Starting game…", startFailed: "Could not start the game. Check the connection and retry.", waitingPlayers: "Waiting for players…", host: "Host", player: "Player", lanNeedServer: "Start with npm start, then open the LAN address.", roomReady: "Players may join now. Empty seats will use AI.", copied: "Room code copied", copyUnavailable: "Clipboard access is unavailable. Copy the code manually.", connectionLost: "The host closed the room or the connection was lost."
   };
   const zh = {
     officialHome: "返回官网", heroKicker: "四人结盟 · 牌局争锋", heroTitle: "一桌掼蛋，<em>胜负由你。</em>", heroDescription: "完整单机练习与局域网房间。识别牌型、配合对家，在每一次出牌中掌控节奏。",
-    singlePlayer: "单机练习", singleDescription: "与三位本地 AI 对局", lanGame: "局域网联机", lanDescription: "同一网络，房间码加入", tutorial: "新手教程", settings: "游戏设置", announcement: "最新公告", announcementTitle: "局域网流程稳定性修复", announcementCopy: "拦截重复创建与加入请求，并在开局发送失败时恢复按钮和明确提示。", ready: "准备就绪",
+    singlePlayer: "单机练习", singleDescription: "与三位本地 AI 对局", lanGame: "局域网联机", lanDescription: "同一网络，房间码加入", tutorial: "新手教程", settings: "游戏设置", announcement: "最新公告", announcementTitle: "全维稳定性深度修复", announcementCopy: "修复联机开局竞态、快照乱序、极值手牌遮挡与教程横向溢出。", ready: "准备就绪",
     teammate: "队友", ourTeam: "我方", pass: "不出", hint: "提示", play: "出牌", soundSettings: "声音设置", sfx: "游戏音效", sfxCopy: "出牌、提示与胜负反馈", sfxVolume: "音效音量", sfxPitch: "音效音高", sfxProfile: "音效音色", previewSfx: "试听当前音效", profileSoft: "柔和", profileClassic: "经典", profileCrisp: "清脆", bgm: "背景音乐", bgmCopy: "低音量程序化牌桌音乐", bgmVolume: "音乐音量", bgmTempo: "音乐速度", bgmTexture: "音乐层次", textureMinimal: "轻简", textureBalanced: "均衡", textureRich: "丰富", displaySettings: "显示与语言", language: "界面语言", motion: "动画效果", motionFull: "完整动画", motionReduced: "减少动画", motionSpeed: "动画速度", cardScale: "牌面尺寸", tableBrightness: "牌桌亮度", contrast: "界面对比度", saturation: "牌桌饱和度", announcements: "首页公告", announcementsCopy: "在主页面显示版本动态", gameplaySettings: "对局与交互", handSpacing: "手牌重叠", selectionLift: "选牌抬升", aiDelay: "AI 思考时间", toastDuration: "提示停留时间", autoScroll: "提示自动定位", autoScrollCopy: "将提示选牌滚动到可视区域", confirmRestart: "重开二次确认", confirmRestartCopy: "避免误触导致当前进度丢失", haptics: "震动反馈", hapticsCopy: "支持设备在炸弹与获胜时震动", hapticStrength: "震动强度", resetSettings: "恢复默认设置", settingsRuntime: "设置仅在当前运行期间生效", about: "关于",
     tutorialKicker: "五步入门", tutorial1Title: "认清你的队伍", tutorial1Copy: "你与对面玩家是一队。配合队友，比单纯压过每一手牌更重要。", tutorial2Title: "认识逢人配", tutorial2Copy: "红桃级牌可以替代除大小王以外的任意牌，是组合强牌的关键。", tutorial3Title: "同型才能压制", tutorial3Copy: "普通牌需要牌型、张数一致且点数更大；炸弹可以打破这一限制。", tutorial4Title: "完成一次出牌", tutorial4Copy: "点击手牌进行选择。拿不准时使用提示，没有合适的牌就选择不出。", tutorial5Title: "与队友一起升级", tutorial5Copy: "头游与队友名次决定升级幅度。率先打过 A 即可完成比赛。", previous: "上一步", next: "下一步", finish: "开始游戏",
-    playerName: "玩家名称", createRoom: "创建房间", or: "或", roomCode: "房间码", joinRoom: "加入房间", copy: "复制", startGame: "开始游戏", startingGame: "正在开始游戏…", startFailed: "开局失败，请检查连接后重试。", waitingPlayers: "等待玩家加入…", host: "房主", player: "玩家", lanNeedServer: "请使用 npm start 启动项目，再通过局域网地址访问。", roomReady: "可以邀请玩家加入，空座将由 AI 补齐。", copied: "房间码已复制", copyUnavailable: "当前无法访问剪贴板，请手动复制房间码。", connectionLost: "房主已关闭房间或网络连接已中断。"
+    playerName: "玩家名称", createRoom: "创建房间", or: "或", roomCode: "房间码", joinRoom: "加入房间", copy: "复制", leaveRoom: "退出房间", startGame: "开始游戏", startingGame: "正在开始游戏…", startFailed: "开局失败，请检查连接后重试。", waitingPlayers: "等待玩家加入…", host: "房主", player: "玩家", lanNeedServer: "请使用 npm start 启动项目，再通过局域网地址访问。", roomReady: "可以邀请玩家加入，空座将由 AI 补齐。", copied: "房间码已复制", copyUnavailable: "当前无法访问剪贴板，请手动复制房间码。", connectionLost: "房主已关闭房间或网络连接已中断。"
   };
   const locale = (overrides = {}) => ({ ...en, ...overrides });
   const I18N = {
@@ -107,7 +107,10 @@
     document.documentElement.style.setProperty("--selection-lift", settings.selectionLift / 100);
     document.documentElement.style.setProperty("--selection-lift-offset", `${settings.selectionLift * -.2}px`);
     const handTopRoom = Math.round((8 + Math.max(0, settings.selectionLift - 100) * .2 + Math.max(0, settings.cardScale - 100) * .426) * 10) / 10;
+    const handClearance = Math.round(Math.max(0, handTopRoom - 8) * 10) / 10;
     document.documentElement.style.setProperty("--hand-top-room", `${handTopRoom}px`);
+    document.documentElement.style.setProperty("--hand-clearance", `${handClearance}px`);
+    document.body.classList.toggle("expanded-hand", handClearance > 5);
     document.body.style.setProperty("--ui-contrast", settings.contrast / 100);
     document.body.style.setProperty("--table-saturation", String(settings.saturation / 100).replace(/^0/, ""));
     const tintStrength = (Math.abs(settings.tableBrightness - 100) / 250).toFixed(2);
@@ -132,14 +135,19 @@
     $("game-screen").classList.add("view-hidden");
     $("home-screen").classList.remove("view-hidden");
   };
-  const showGame = mode => {
+  const showGame = modeKey => {
     $("home-screen").classList.add("view-hidden");
     $("game-screen").classList.remove("view-hidden");
-    $("game-mode-label").textContent = mode;
+    $("game-mode-label").dataset.i18n = modeKey;
+    $("game-mode-label").textContent = t(modeKey);
   };
 
   const renderTutorial = () => {
-    document.querySelectorAll(".tutorial-slide").forEach((slide, index) => slide.classList.toggle("active", index === tutorialStep));
+    document.querySelectorAll(".tutorial-slide").forEach((slide, index) => {
+      const active = index === tutorialStep;
+      slide.classList.toggle("active", active);
+      slide.setAttribute("aria-hidden", String(!active));
+    });
     document.querySelectorAll(".tutorial-progress i").forEach((item, index) => item.classList.toggle("active", index <= tutorialStep));
     $("tutorial-count").textContent = `${tutorialStep + 1} / 5`;
     $("tutorial-prev").disabled = tutorialStep === 0;
@@ -174,12 +182,14 @@
       const payload = message.payload;
       if (!payload || message.sender === room.clientId) return;
       if (payload.type === "start") {
+        if (!Array.isArray(payload.players) || payload.players.length < 2) return;
+        room.players = payload.players;
         room.started = true;
-        window.GuandanGame?.configureLan({ seat: room.seat, host: room.host, humanSeats: payload.seats, names: payload.names, send: sendRoom });
-        showGame(t("lanGame"));
+        window.GuandanGame?.configureLan({ seat: room.seat, host: room.host, humanSeats: room.players.map(player => player.seat), names: namesFromPlayers(room.players), send: sendRoom });
+        showGame("lanGame");
         close($("lan-dialog"));
       } else if (payload.type === "snapshot" && !room.host) {
-        window.GuandanGame?.applyLanSnapshot(payload.state);
+        window.GuandanGame?.applyLanSnapshot(payload.state, payload.revision);
       } else if (payload.type === "action" && room.host) {
         window.GuandanGame?.handleLanAction(message.seat, payload);
       }
@@ -203,8 +213,11 @@
       const name = escapeHtml(player.name);
       return `<div class="lan-player"><i>${escapeHtml(player.name.slice(0, 1))}</i><span>${name}</span><small>${player.seat === 0 ? t("host") : `${t("player")} ${player.seat + 1}`}</small></div>`;
     }).join("");
-    $("lan-status").textContent = (room.players?.length || 0) < 2 ? t("waitingPlayers") : t("roomReady");
-    $("start-lan-game").disabled = !room.host || (room.players?.length || 0) < 2;
+    const starting = Boolean(room.starting);
+    $("lan-status").textContent = starting ? t("startingGame") : (room.players?.length || 0) < 2 ? t("waitingPlayers") : t("roomReady");
+    $("start-lan-game").disabled = starting || !room.host || (room.players?.length || 0) < 2;
+    $("start-lan-game").textContent = starting ? t("startingGame") : t("startGame");
+    $("start-lan-game").setAttribute("aria-busy", String(starting));
   };
 
   const enterRoom = async data => {
@@ -254,22 +267,24 @@
 
   const startLanGame = async () => {
     const button = $("start-lan-game");
-    if (!room || button.disabled) return;
+    if (!room || room.starting || button.disabled) return;
     const activeRoom = room;
-    button.disabled = true;
-    $("lan-status").textContent = t("startingGame");
+    activeRoom.starting = true;
+    renderRoom();
     try {
+      const result = await sendRoom({ type: "start" });
+      if (room !== activeRoom) return;
+      activeRoom.players = result.room.players;
       const seats = activeRoom.players.map(player => player.seat);
       const names = namesFromPlayers(activeRoom.players);
-      await sendRoom({ type: "start", seats, names });
-      if (room !== activeRoom) return;
       activeRoom.started = true;
       window.GuandanGame?.configureLan({ seat: activeRoom.seat, host: true, humanSeats: seats, names, send: sendRoom });
-      showGame(t("lanGame"));
+      showGame("lanGame");
       close($("lan-dialog"));
       window.GuandanGame?.startLanGame();
     } catch (error) {
       if (room !== activeRoom) return;
+      activeRoom.starting = false;
       renderRoom();
       $("lan-status").textContent = t("startFailed");
     }
@@ -277,7 +292,7 @@
 
   $("single-player-button").addEventListener("click", async () => {
     await leaveRoom();
-    showGame(t("singlePlayer"));
+    showGame("singlePlayer");
     window.GuandanGame?.startSingle();
   });
   $("home-button").addEventListener("click", async () => { await leaveRoom(); showHome(); });
@@ -288,7 +303,7 @@
   $("close-tutorial").addEventListener("click", () => close($("tutorial-dialog")));
   $("tutorial-prev").addEventListener("click", () => { tutorialStep = Math.max(0, tutorialStep - 1); renderTutorial(); });
   $("tutorial-next").addEventListener("click", async () => {
-    if (tutorialStep === 4) { await leaveRoom(); close($("tutorial-dialog")); showGame(t("singlePlayer")); window.GuandanGame?.startSingle(); }
+    if (tutorialStep === 4) { await leaveRoom(); close($("tutorial-dialog")); showGame("singlePlayer"); window.GuandanGame?.startSingle(); }
     else { tutorialStep++; renderTutorial(); }
   });
   $("lan-button").addEventListener("click", () => open($("lan-dialog")));
@@ -302,6 +317,7 @@
       $("lan-status").textContent = t("copied");
     } catch (_) { $("lan-status").textContent = t("copyUnavailable"); }
   });
+  $("leave-room").addEventListener("click", leaveRoom);
   $("start-lan-game").addEventListener("click", startLanGame);
 
   $("language-select").addEventListener("change", event => { settings.language = language = event.target.value; translate(); });
