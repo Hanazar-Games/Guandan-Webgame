@@ -27,6 +27,7 @@ const { createGameServer } = require("../lan-server.cjs");
     const created = await request("/api/rooms", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "房主" }) });
     assert.equal(created.status, 201);
     assert.equal(created.body.room.players[0].seat, 0);
+    assert.deepEqual(Object.keys(created.body.room.players[0]).sort(), ["name", "seat"], "公开房间数据不得泄露玩家鉴权 ID");
     const { code } = created.body.room;
 
     const joined = await request(`/api/rooms/${code}/join`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "队友" }) });
@@ -35,6 +36,7 @@ const { createGameServer } = require("../lan-server.cjs");
 
     const room = await request(`/api/rooms/${code}`);
     assert.equal(room.body.players.length, 2);
+    assert.equal(room.body.players.some(player => "id" in player), false, "匿名房间查询不得暴露任何客户端凭据");
     const eventsController = new AbortController();
     const events = await fetch(`${base}/api/rooms/${code}/events?client=${joined.body.clientId}`, { signal: eventsController.signal });
     assert.equal(events.status, 200);
@@ -54,6 +56,20 @@ const { createGameServer } = require("../lan-server.cjs");
     const started = await request(`/api/rooms/${code}/message?client=${created.body.clientId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ payload: { type: "start" } }) });
     assert.equal(started.status, 202);
     assert.equal(started.body.room.players.length, 2, "开局响应应返回服务端确认的实时阵容");
+    assert.equal(started.body.room.started, true, "公开房间状态应允许迟到的事件订阅者识别已开局状态");
+    await request(`/api/rooms/${code}/message?client=${created.body.clientId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ payload: { type: "snapshot", revision: 7, state: { marker: "latest" } } }) });
+    const lateEventsController = new AbortController();
+    const lateEvents = await fetch(`${base}/api/rooms/${code}/events?client=${rejoined.body.clientId}`, { signal: lateEventsController.signal });
+    const lateReader = lateEvents.body.getReader();
+    let latePayload = "";
+    for (let index = 0; index < 3 && !latePayload.includes('"revision":7'); index++) {
+      const chunk = await Promise.race([lateReader.read(), new Promise(resolve => setTimeout(() => resolve({ done: true }), 100))]);
+      if (chunk.done) break;
+      latePayload += new TextDecoder().decode(chunk.value);
+    }
+    lateEventsController.abort();
+    assert.match(latePayload, /"started":true/, "迟到订阅者应收到已开局房间状态");
+    assert.match(latePayload, /"revision":7/, "迟到订阅者应立即补收最后一份牌局快照");
     const lateJoin = await request(`/api/rooms/${code}/join`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "迟到玩家" }) });
     assert.equal(lateJoin.status, 409, "开局后不得继续加入房间");
 

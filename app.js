@@ -130,7 +130,7 @@
     if (!$("game-screen").classList.contains("view-hidden")) window.GuandanGame?.resume();
   };
   const showHome = () => {
-    window.GuandanGame?.pause();
+    window.GuandanGame?.leave();
     ["rules-dialog", "restart-dialog", "result-dialog"].forEach(id => close($(id)));
     $("game-screen").classList.add("view-hidden");
     $("home-screen").classList.remove("view-hidden");
@@ -169,34 +169,45 @@
     return names;
   };
 
-  const connectEvents = () => {
-    room.events?.close();
-    room.events = new EventSource(`/api/rooms/${room.code}/events?client=${encodeURIComponent(room.clientId)}`);
-    room.events.addEventListener("room", event => {
-      room.players = JSON.parse(event.data).players;
+  const beginLanGame = activeRoom => {
+    if (room !== activeRoom || activeRoom.started || !Array.isArray(activeRoom.players) || activeRoom.players.length < 2) return;
+    activeRoom.started = true;
+    window.GuandanGame?.configureLan({ seat: activeRoom.seat, host: activeRoom.host, humanSeats: activeRoom.players.map(player => player.seat), names: namesFromPlayers(activeRoom.players), send: sendRoom });
+    showGame("lanGame");
+    close($("lan-dialog"));
+  };
+
+  const connectEvents = (activeRoom = room) => {
+    if (!activeRoom) return;
+    activeRoom.events?.close();
+    activeRoom.events = new EventSource(`/api/rooms/${activeRoom.code}/events?client=${encodeURIComponent(activeRoom.clientId)}`);
+    activeRoom.events.addEventListener("room", event => {
+      if (room !== activeRoom) return;
+      const view = JSON.parse(event.data);
+      activeRoom.players = view.players;
       renderRoom();
-      window.GuandanGame?.updateLanPlayers(room.players.map(player => player.seat), namesFromPlayers(room.players));
+      if (view.started) beginLanGame(activeRoom);
+      if (activeRoom.started) window.GuandanGame?.updateLanPlayers(activeRoom.players.map(player => player.seat), namesFromPlayers(activeRoom.players));
     });
-    room.events.addEventListener("message", event => {
+    activeRoom.events.addEventListener("message", event => {
+      if (room !== activeRoom) return;
       const message = JSON.parse(event.data);
       const payload = message.payload;
-      if (!payload || message.sender === room.clientId) return;
+      if (!payload || message.sender === activeRoom.clientId) return;
       if (payload.type === "start") {
         if (!Array.isArray(payload.players) || payload.players.length < 2) return;
-        room.players = payload.players;
-        room.started = true;
-        window.GuandanGame?.configureLan({ seat: room.seat, host: room.host, humanSeats: room.players.map(player => player.seat), names: namesFromPlayers(room.players), send: sendRoom });
-        showGame("lanGame");
-        close($("lan-dialog"));
-      } else if (payload.type === "snapshot" && !room.host) {
+        activeRoom.players = payload.players;
+        beginLanGame(activeRoom);
+      } else if (payload.type === "snapshot" && !activeRoom.host) {
         window.GuandanGame?.applyLanSnapshot(payload.state, payload.revision);
-      } else if (payload.type === "action" && room.host) {
+      } else if (payload.type === "action" && activeRoom.host) {
         window.GuandanGame?.handleLanAction(message.seat, payload);
       }
     });
-    room.events.onerror = () => {
-      if (!room?.started) return void ($("lan-status").textContent = t("lanNeedServer"));
-      room.events?.close();
+    activeRoom.events.onerror = () => {
+      if (room !== activeRoom) return;
+      if (!activeRoom.started) return void ($("lan-status").textContent = t("lanNeedServer"));
+      activeRoom.events?.close();
       room = null;
       $("lan-connect").classList.remove("view-hidden");
       $("lan-lobby").classList.add("view-hidden");
@@ -221,26 +232,27 @@
   };
 
   const enterRoom = async data => {
-    room = { code: data.room.code, clientId: data.clientId, seat: data.seat, host: data.host, players: data.room.players, started: false };
+    const activeRoom = room = { code: data.room.code, clientId: data.clientId, seat: data.seat, host: data.host, players: data.room.players, started: false };
     $("lan-connect").classList.add("view-hidden");
     $("lan-lobby").classList.remove("view-hidden");
+    renderRoom();
+    connectEvents(activeRoom);
     try {
       const info = await api("/api/info");
+      if (room !== activeRoom) return;
       const port = location.port || "4173";
       $("lan-address").textContent = info.addresses.length ? info.addresses.map(address => `http://${address}:${port}`).join(" · ") : location.href;
-    } catch (_) { $("lan-address").textContent = location.href; }
-    renderRoom();
-    connectEvents();
+    } catch (_) { if (room === activeRoom) $("lan-address").textContent = location.href; }
   };
 
-  const leaveRoom = async () => {
+  const leaveRoom = () => {
     if (!room) return;
     const leaving = room;
     room = null;
     leaving.events?.close();
     $("lan-connect").classList.remove("view-hidden");
     $("lan-lobby").classList.add("view-hidden");
-    try { await api(`/api/rooms/${leaving.code}/leave?client=${encodeURIComponent(leaving.clientId)}`, { method: "POST", body: "{}" }); } catch (_) {}
+    void api(`/api/rooms/${leaving.code}/leave?client=${encodeURIComponent(leaving.clientId)}`, { method: "POST", body: "{}" }).catch(() => {});
   };
 
   const roomAction = async action => {
@@ -256,7 +268,7 @@
         : await api(`/api/rooms/${$("lan-room-code").value.trim().toUpperCase()}/join`, { method: "POST", body: JSON.stringify({ name }) });
       await enterRoom(data);
     } catch (error) {
-      if (room) await leaveRoom();
+      if (room) leaveRoom();
       $("lan-connect-status").textContent = error.message || t("lanNeedServer");
     }
     finally {
@@ -290,20 +302,20 @@
     }
   };
 
-  $("single-player-button").addEventListener("click", async () => {
-    await leaveRoom();
+  $("single-player-button").addEventListener("click", () => {
+    leaveRoom();
     showGame("singlePlayer");
     window.GuandanGame?.startSingle();
   });
-  $("home-button").addEventListener("click", async () => { await leaveRoom(); showHome(); });
+  $("home-button").addEventListener("click", () => { leaveRoom(); showHome(); });
   [$("settings-button"), $("home-settings-button"), $("game-settings-button")].forEach(button => button.addEventListener("click", openSettings));
   $("close-settings").addEventListener("click", closeSettings);
   $("settings-dialog").addEventListener("cancel", event => { event.preventDefault(); closeSettings(); });
   $("tutorial-button").addEventListener("click", () => { tutorialStep = 0; renderTutorial(); open($("tutorial-dialog")); });
   $("close-tutorial").addEventListener("click", () => close($("tutorial-dialog")));
   $("tutorial-prev").addEventListener("click", () => { tutorialStep = Math.max(0, tutorialStep - 1); renderTutorial(); });
-  $("tutorial-next").addEventListener("click", async () => {
-    if (tutorialStep === 4) { await leaveRoom(); close($("tutorial-dialog")); showGame("singlePlayer"); window.GuandanGame?.startSingle(); }
+  $("tutorial-next").addEventListener("click", () => {
+    if (tutorialStep === 4) { leaveRoom(); close($("tutorial-dialog")); showGame("singlePlayer"); window.GuandanGame?.startSingle(); }
     else { tutorialStep++; renderTutorial(); }
   });
   $("lan-button").addEventListener("click", () => open($("lan-dialog")));

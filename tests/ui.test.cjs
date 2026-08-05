@@ -229,6 +229,10 @@ assert.equal(elements.get("play-button").classList.contains("power"), false, "�
 assert.equal(elements.get("selection-tip").classList.contains("power"), false, "本局结束后选牌提示不得残留炸弹状态");
 assert.equal(elements.get("new-game-button").disabled, true, "等待结果弹窗时不得再打开重开确认框");
 assert.equal(elements.get("help-button").disabled, true, "等待结果弹窗时不得叠加规则弹窗");
+const pendingResultTimer = context.__guandanState.resultTimer;
+context.window.GuandanGame.leave();
+assert.equal(context.__guandanState.resultTimer, null, "离开牌桌时应取消尚未弹出的结算弹窗");
+assert.equal(clearedTimers.includes(pendingResultTimer), true, "回到首页后结算弹窗不得延迟重现");
 
 restartDialog.showModal();
 let restartPrevented = false;
@@ -265,6 +269,7 @@ assert.match(css, /\.icon-button\[aria-pressed="true"\]\s*\{[^}]*color:\s*var\(-
 assert.match(css, /\.icon-button:disabled,\s*\.new-game-button:disabled\s*\{[^}]*cursor:\s*not-allowed;/s, "结算期间禁用的顶部控件应有明确反馈");
 assert.match(css, /\.game-button span\s*\{[^}]*white-space:\s*nowrap;/s, "操作按钮文字不得因图标挤压而换行");
 assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*?\.action-area\s*\{[^}]*width:\s*224px;/s, "窄屏操作区应为图标与文字预留足够宽度");
+assert.match(css, /\.round-meta div\s*\{[^}]*white-space:\s*nowrap;/s, "极窄顶部当前级牌信息不得断行");
 assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*?\.trick-zone\s*\{[^}]*top:\s*135px;[^}]*transform:\s*translateX\(-50%\);/s, "极窄屏中央状态应避开顶部牌背");
 assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*?\.match-score\s*\{[^}]*display:\s*none;/s, "极窄屏应隐藏次要计分牌以免遮挡队友信息");
 assert.match(css, /\.new-game-button\s*\{[^}]*white-space:\s*nowrap;[^}]*flex-shrink:\s*0;/s, "平板工具栏不得压缩重开按钮文字");
@@ -295,6 +300,8 @@ assert.match(css, /\.tutorial-slides\s*\{[^}]*overflow:\s*hidden;/s, "非活动�
 assert.match(css, /\.hand-scroll\s*\{[^}]*height:\s*calc\(117px \+ var\(--hand-top-room\)\);/s, "极值牌面与抬升应扩展手牌顶部空间");
 assert.match(css, /\.action-area\s*\{[^}]*bottom:\s*calc\(142px \+ var\(--hand-clearance\)\);/s, "扩展手牌时操作区应同步避让");
 assert.match(css, /body\.expanded-hand \.action-area/, "短屏极值手牌应改用侧向操作布局");
+assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*?body\.expanded-hand \.hand-scroll\s*\{[^}]*left:\s*22%;/s, "移动端极值手牌应横向避开本地玩家头像");
+assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*?body\.expanded-hand \.player-you \.player-copy\s*\{[^}]*display:\s*none;/s, "移动端极值布局应收起会被手牌遮挡的玩家次要信息");
 assert.match(css, /\.announcement-hidden \.hero-panel/, "隐藏公告时首页内容应重新居中排版");
 assert.match(html, /id="toast" role="status" aria-live="polite"/, "普通游戏提示不应强制打断读屏内容");
 assert.match(css, /@media \(max-height:\s*600px\) and \(min-width:761px\)[\s\S]*?\.home-screen\s*\{[^}]*overflow:\s*auto;/s, "短横屏主页面不应裁掉入口");

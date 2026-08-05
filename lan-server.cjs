@@ -51,11 +51,13 @@ function createGameServer(root = __dirname, { disconnectGraceMs = 15000 } = {}) 
 
   const roomView = room => ({
     code: room.code,
-    players: [...room.players.values()].sort((a, b) => a.seat - b.seat).map(({ id, name, seat }) => ({ id, name, seat }))
+    started: Boolean(room.started),
+    players: [...room.players.values()].sort((a, b) => a.seat - b.seat).map(({ name, seat }) => ({ name, seat }))
   });
 
+  const eventMessage = (event, data) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   const emit = (room, event, data) => {
-    const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    const message = eventMessage(event, data);
     for (const response of room.streams.values()) response.write(message);
   };
 
@@ -90,7 +92,7 @@ function createGameServer(root = __dirname, { disconnectGraceMs = 15000 } = {}) 
       let code = roomCode();
       while (rooms.has(code)) code = roomCode();
       const id = randomUUID();
-      const room = { code, players: new Map(), streams: new Map(), disconnectTimers: new Map(), updatedAt: Date.now() };
+      const room = { code, players: new Map(), streams: new Map(), disconnectTimers: new Map(), lastSnapshot: null, updatedAt: Date.now() };
       room.players.set(id, { id, name: cleanName(body.name), seat: 0 });
       rooms.set(code, room);
       return sendJson(response, 201, { clientId: id, seat: 0, host: true, room: roomView(room) });
@@ -130,7 +132,8 @@ function createGameServer(root = __dirname, { disconnectGraceMs = 15000 } = {}) 
         Connection: "keep-alive"
       });
       room.streams.set(clientId, response);
-      response.write(`event: room\ndata: ${JSON.stringify(roomView(room))}\n\n`);
+      response.write(eventMessage("room", roomView(room)));
+      if (room.lastSnapshot) response.write(eventMessage("message", room.lastSnapshot));
       const heartbeat = setInterval(() => response.write(": ping\n\n"), 20000);
       response.on("close", () => {
         clearInterval(heartbeat);
@@ -157,7 +160,9 @@ function createGameServer(root = __dirname, { disconnectGraceMs = 15000 } = {}) 
         startedRoom = roomView(room);
         payload = { type: "start", players: startedRoom.players };
       }
-      emit(room, "message", { sender: clientId, seat: player.seat, payload });
+      const message = { sender: clientId, seat: player.seat, payload };
+      if (payload?.type === "snapshot") room.lastSnapshot = message;
+      emit(room, "message", message);
       return sendJson(response, 202, { ok: true, ...(startedRoom ? { room: startedRoom } : {}) });
     }
 

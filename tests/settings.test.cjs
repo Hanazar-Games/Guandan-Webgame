@@ -6,7 +6,7 @@ const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
 let source = fs.readFileSync(require.resolve("../app.js"), "utf8");
 source = source.replace(
   "  syncSettingsControls();\n  applyRuntimeSettings();\n  translate();\n  showHome();",
-  "  globalThis.__appTest = { renderRoom, showGame, setRoom: value => { room = value; } };\n  syncSettingsControls();\n  applyRuntimeSettings();\n  translate();\n  showHome();"
+  "  globalThis.__appTest = { renderRoom, showGame, connectEvents, getRoom: () => room, setRoom: value => { room = value; } };\n  syncSettingsControls();\n  applyRuntimeSettings();\n  translate();\n  showHome();"
 );
 
 class ClassList {
@@ -82,12 +82,21 @@ const preferenceCalls = [];
 let previewCalls = 0;
 let pauses = 0;
 let resumes = 0;
+let leaves = 0;
+let singleStarts = 0;
+const lanConfigurations = [];
+const lanSnapshots = [];
 const windowListeners = new Map();
 const window = {
   GuandanGame: {
     pause() { pauses++; },
+    leave() { leaves++; },
     resume() { resumes++; },
     previewSfx() { previewCalls++; },
+    startSingle() { singleStarts++; },
+    configureLan(settings) { lanConfigurations.push(settings); },
+    updateLanPlayers() {},
+    applyLanSnapshot(state, revision) { lanSnapshots.push({ state, revision }); },
     setAudio(settings) { audioCalls.push(settings); },
     setPreferences(settings) { preferenceCalls.push(settings); }
   },
@@ -96,17 +105,25 @@ const window = {
     windowListeners.get(type).push(listener);
   }
 };
-const context = { console, document, window, location: { port: "4173", href: "http://localhost:4173/" }, navigator: {} };
+const eventSources = [];
+class FakeEventSource {
+  constructor(url) { this.url = url; this.listeners = new Map(); this.closed = false; eventSources.push(this); }
+  addEventListener(type, listener) { this.listeners.set(type, listener); }
+  close() { this.closed = true; }
+  emit(type, data) { this.listeners.get(type)?.({ data: JSON.stringify(data) }); }
+}
+const context = { console, document, window, EventSource: FakeEventSource, fetch: () => new Promise(() => {}), location: { port: "4173", href: "http://localhost:4173/" }, navigator: {} };
 vm.createContext(context);
 vm.runInContext(source, context);
 
 assert.match(source, /escapeHtml\(player\.name\)/, "局域网玩家名称写入大厅前必须转义");
 assert.match(source, /let roomBusy = false;/, "创建或加入房间时应使用请求互斥锁");
 assert.match(source, /if \(roomBusy\) return;[\s\S]*roomBusy = true;/, "重复房间请求应在发送前被拦截");
-assert.match(source, /const roomAction = async action => \{[\s\S]*catch \(error\) \{[\s\S]*if \(room\) await leaveRoom\(\);/, "进入大厅失败后应释放已经创建的半连接房间");
+assert.match(source, /const roomAction = async action => \{[\s\S]*catch \(error\) \{[\s\S]*if \(room\) leaveRoom\(\);/, "进入大厅失败后应释放已经创建的半连接房间");
 assert.match(source, /const startLanGame = async \(\) => \{[\s\S]*activeRoom\.starting = true;[\s\S]*catch \(error\) \{[\s\S]*activeRoom\.starting = false;/, "联机开局失败时应恢复大厅并显示错误");
 assert.match(source, /catch \(error\) \{[\s\S]*renderRoom\(\);[\s\S]*lan-status[\s\S]*startFailed/, "恢复按钮后不得覆盖联机开局错误提示");
 assert.match(source, /slide\.setAttribute\("aria-hidden", String\(!active\)\)/, "非活动教程页应从读屏树隐藏");
+assert.equal(leaves > 0, true, "回到主页面时应清理牌局的延迟任务与联机状态");
 
 const fire = (id, type) => elements.get(id).listeners.get(type)[0]({ target: elements.get(id), preventDefault() {} });
 assert.equal(outputs.get("setting-sfx-volume").textContent, "100%");
@@ -196,6 +213,27 @@ elements.get("language-select").value = "en";
 fire("language-select", "change");
 context.__appTest.showGame("lanGame");
 assert.equal(elements.get("game-mode-label").textContent, "LAN game", "切换语言后联机模式不得误显示为单机练习");
+
+const oldRoom = { code: "OLD123", clientId: "old", seat: 1, host: false, players: [{ seat: 0, name: "旧房主" }, { seat: 1, name: "旧访客" }], started: false };
+context.__appTest.setRoom(oldRoom);
+context.__appTest.connectEvents();
+const oldEvents = eventSources.at(-1);
+const newRoom = { code: "NEW123", clientId: "new", seat: 1, host: false, players: [{ seat: 0, name: "新房主" }, { seat: 1, name: "新访客" }], started: false };
+context.__appTest.setRoom(newRoom);
+oldEvents.emit("room", { players: [{ seat: 0, name: "过期房主" }], started: false });
+assert.equal(context.__appTest.getRoom().players[0].name, "新房主", "旧事件流的迟到消息不得污染新房间");
+
+context.__appTest.connectEvents();
+const recoveredEvents = eventSources.at(-1);
+recoveredEvents.emit("room", { players: newRoom.players, started: true });
+assert.equal(lanConfigurations.length > 0, true, "迟到建立事件流的访客应从房间状态恢复联机牌局");
+recoveredEvents.emit("message", { sender: "host", seat: 0, payload: { type: "snapshot", revision: 7, state: { marker: "latest" } } });
+assert.equal(lanSnapshots.at(-1).revision, 7, "恢复牌局后应继续接收服务端补发的最新快照");
+
+context.__appTest.setRoom({ code: "LEAVE1", clientId: "guest", seat: 1, host: false, players: newRoom.players, started: true, events: recoveredEvents });
+fire("single-player-button", "click");
+assert.equal(singleStarts, 1, "离房网络请求未完成时也应立即进入单机牌局");
+assert.equal(context.__appTest.getRoom(), null, "离房操作应立即清理本地房间状态");
 
 fire("reset-settings", "click");
 assert.equal(elements.get("setting-card-scale").value, 100);

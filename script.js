@@ -614,6 +614,13 @@
     state.resultTimer = null;
   }
 
+  function leaveGame() {
+    pauseAI();
+    cancelResultDialog();
+    state.lan = null;
+    state.selected.clear();
+  }
+
   function startGame(resetMatch = false) {
     pauseAI();
     cancelResultDialog();
@@ -954,6 +961,7 @@
 
   window.GuandanGame = {
     pause: pauseAI,
+    leave: leaveGame,
     startSingle() {
       state.localPlayer = 0;
       state.lan = null;

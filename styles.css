@@ -122,7 +122,7 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
 .brand p { margin: 1px 0 0; color: var(--muted); font-size: 10px; letter-spacing: 2px; }
 
 .round-meta { display: flex; align-items: center; gap: 20px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
-.round-meta div { display: flex; align-items: baseline; gap: 5px; }
+.round-meta div { display: flex; align-items: baseline; gap: 5px; white-space:nowrap; }
 .round-meta strong { color: var(--ink); font-size: 22px; font-weight: 700; }
 .round-meta .level-rank { color: var(--gold-bright); font-family: Georgia, serif; font-size: 27px; }
 .round-meta i { width: 1px; height: 24px; background: rgba(255,255,255,.16); }
@@ -417,6 +417,8 @@ button:focus-visible, .card:focus-visible { outline: 3px solid var(--gold-bright
   .action-area { bottom:calc(151px + var(--hand-clearance)); }
   .game-button { height:44px; }
   .hand-scroll { left:2%; right:2%; bottom:16px; }
+  body.expanded-hand .hand-scroll { left:22%; }
+  body.expanded-hand .player-you .player-copy { display:none; }
   .team-badge { display:none; }
   .match-score { top:12px; right:10px; gap:8px; padding:7px 9px; transform:scale(.88); transform-origin:top right; }
   .score-team small { display:none; }
